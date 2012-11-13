@@ -18,14 +18,14 @@ The NS Cloner will take any existing site on your WordPress multisite network an
 
 = Standard Precautions and Notes =
 * This plugin ONLY works on WordPress Multisite and is not for use on single site installations. 
-* It currently only supports subdomain mode.
+* It now supports both subdomain and subdirectory mode! It will auto-detect and auto-render appropriate UI.
 * We have used the NS Cloner on production systems for months and months without issue. That doesn't mean your scenario won't find some new condition that could cause you some headaches. Unlikey, but always possible. We recommend getting familiar with it on a test system before you deploy it to a critical network.
 * And for the love - backup your data. This plugin operates at the database level to work its magic. We've run it hundreds of times on our own sites and client sites, and tested it thoroughly. It's safe. But don't take our word for it.
 
 = Typical Workflow for using the NS Cloner =
 1. Set up 1 or more "template" sites exactly the way you want your clones to start out
 1. Go to your Network Dashboard > Sites > NS Cloner
-1. Select the "template" site you that want to clone, type the name (subdomain) of the new site, and put in it's Title
+1. Select the "template" site you that want to clone, type the name of the new site, and put in it's Title
 1. Clone Away!
 
 Yes, it really is that easy.
@@ -35,6 +35,17 @@ Yes, it really is that easy.
 * Organizations which provide "member" sites and want to be able to reduce the site spin up time to almost nothing.
 * Affiliates that host numerous sites through Multisite and are looking for a way to increase reach and decrease deployment times. 
 * Designers who want to be able to create several versions of sites to test and play with different theme designs in parallel without having to re-install all the same plugins and base themes over and over.
+
+== Features ==
+
+= Some of the NS Cloner highlight features: =
+1. Incredibly simple 4 step process to copy entire sites in seconds
+1. Works in subdomain or subdirectory modes and auto-detects which is in use
+1. Copies ALL theme and plugin settings
+1. Copies ALL content including custom post types and taxonomies
+1. Copies ALL site settings and configurations 
+1. Copies ALL media files uploaded to the original site
+1. Intelligently replaces subdomain and subdirectory names to ensure that everything works in the context of the new site
 
 == Installation ==
 
@@ -47,17 +58,26 @@ Yes, it really is that easy.
 
 = Does the NS Cloner work on subdomain networks as well as subfolder networks? =
 
-Currently, the NS Cloner only works on multisite networks that are setup with the subdomain configuration. We are in the process of adding support for subfolder-based networks as well.
+YES! We have just added this functionality.
 
 = When I click the "Clone Away" submit button, the new site is created, but the response generates a 404 page not found? =
 
 Check with your host. They probably have an agreesive mod_security configuration and might need to add or modify some rules for you. For example, rule 1234234 needs to be present which allows dots in querystring parameters.
+
+= When will the Pro version be available? =
+
+We're working hard on this! We are going to release several powerful features with the first Pro verison, but if there is a specific feature that you need right away, get in touch with us and maybe we can get you an Alpha version of Pro that accomplishes what you need.
 
 == Screenshots ==
 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+
+= 2.1.2 =
+* Added Auto-detect of Multisite mode and Subdirectory site support!
+* Added Automatic Copy of all media files in blogs.dir/##
+* Fixed some image loading fails in certain scenarios
 
 = 2.1.1 =
 * First public release

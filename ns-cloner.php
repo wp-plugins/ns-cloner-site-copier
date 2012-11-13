@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.1
+Version: 2.1.2
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -28,6 +28,16 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+/* Pro Version To Do:
+	1. Make the blogs.dir copy optional
+	2. Add serialized array safe, global search and replace from source to clone
+	3. Add search and replace only mode for existing sites
+	4. Add users to the new site at clone-time
+	5. Clone onto pre-existing sites
+	6. Add detailed debug info mode option
+	7. Add configuration options and save defaults for all settings
+*/
+
 define( 'NS_CLONER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NS_CLONER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -38,6 +48,9 @@ $host = DB_HOST;
 $db   = DB_NAME;     
 $usr  = DB_USER;		
 $pwd  = DB_PASSWORD;  
+
+// Multisite Mode; false = subdirs
+$is_subdomain = SUBDOMAIN_INSTALL;
 
 // Report about what was accomplished
 $report = '';		
@@ -50,7 +63,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.1';
+	var $version = '2.1.2';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -136,15 +149,19 @@ class ns_cloner_free {
 		echo '<div class="wrap">';
 			?>
 			<!-- <h1 class="cloner-title">NS Cloner</h1> -->
-			<img class="cloner-banner" alt="Never Settle Cloner Title Banner" src="<? echo $this->banner_img ?>" />
+			<img class="cloner-banner" alt="Never Settle Cloner Title Banner" src="<?php echo $this->banner_img ?>" />
 			<form action="?page=ns-cloner&action=process" method="post" enctype="multipart/form-data">
 				
 				<!-- BEGIN Left Column -->
 				<div class="col-left">
 			
 					<div class="before-clone">
-						<h2 class="cloner-step before-clone-title">Before you begin</h2>
-						<p>If you haven't already, now is a great time to set up a "template" site exactly the way you want the new clone site to start out (theme, plugins, settings, etc.).</p>
+						<?php if (!isset($_GET['updatedmsg']) && !isset($_GET['errormsg'])) { ?>
+							<h2 class="cloner-step before-clone-title">Before you begin</h2>
+							<p>If you haven't already, now is a great time to set up a "template" site exactly the way you want the new clone site to start out (theme, plugins, settings, etc.).</p>
+						<?php } else { ?>
+							<h2 class="cloner-step before-clone-title">Status</h2>
+						<?php } ?>
 					</div>
 					
 					<span class="colorRed">
@@ -153,12 +170,18 @@ class ns_cloner_free {
 						<?php
 							$blogs = $wpdb->get_results("SELECT * FROM $wpdb->blogs ORDER BY blog_id", ARRAY_A);
 							foreach($blogs as $row){
-								// blog id #1 not supported as it isn't a subdomain
+								// blog id #1 not supported as it isn't a subsite and will cause domain name or folder issues
 								if 	($row['blog_id'] !== '1') {
 									$selected = '';			
 									if ($row['blog_id'] == $source_id) { $selected = ' selected="selected"'; }
-									echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' . 
-										get_blog_details($row['blog_id'])->blogname . ' ('. $row['domain'] .')</option>';
+									if ($is_subdomain) {
+										echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
+											get_blog_details($row['blog_id'])->blogname . ' ('. $row['domain'] .')</option>';
+									}
+									else { // subdirectory mode
+										echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
+											get_blog_details($row['blog_id'])->blogname . ' ('. $row['domain'] . $row['path'] . ')</option>';
+									}	
 								}
 							}			
 						?>
@@ -166,8 +189,11 @@ class ns_cloner_free {
 					</span>
 										
 					<h2 class="cloner-step">STEP 2: <span>Give the new site a Name</span></h2>
+					<?php if($is_subdomain) { ?>
 					<p><input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>"/>.<?php echo $current_site->domain; ?></p>
-										
+					<?php } else { ?>
+					<p><?php echo $current_site->domain; ?>/<input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>" /></p>					
+					<?php } ?>
 					<h2 class="cloner-step">STEP 3: <span>Give the new site a Title</span></h2>
 					<p><input id="new_site_title" name="new_site_title" value="<?php echo $_POST['new_site_title']; ?>" type="text" style="width: 300px;"/></p>
 					
@@ -207,7 +233,7 @@ class ns_cloner_free {
 					<p>Donate $10 or more and join our Early Adopters Club for privileged beta access and <b>LIFETIME FREE UPDATES</b> to our Pro version.</p>
 					
 					<p class="cloner-adopter">
-						<img alt="Never Settle Cloner Early Adopter" src="<? echo $this->adopter_img ?>" style="margin-right: 7px"/>
+						<img alt="Never Settle Cloner Early Adopter" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/>
 					</p>				
 					
 					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="text-align: center;">
@@ -265,8 +291,15 @@ class ns_cloner_free {
 						{
 							// Create site
 							$this->create_site($_POST['new_site_name'], $_POST['new_site_title']);
-							$this->status = $this->status . 'Created site <a href="http://' . $_POST['new_site_name'] . '.' . $current_site->domain . '" target="_blank"><b>http://'; 
-							$this->status = $this->status . $_POST['new_site_name'] . '.' . $current_site->domain . '</b></a> with ID: <b>' . $this->target_id . '</b><br />';						
+							// handle subdomain versus subdirectory modes
+							if ($is_subdomain) {
+								$this->status = $this->status . 'Created site <a href="http://' . $_POST['new_site_name'] . '.' . $current_site->domain . '" target="_blank"><b>http://'; 
+								$this->status = $this->status . $_POST['new_site_name'] . '.' . $current_site->domain . '</b></a> with ID: <b>' . $this->target_id . '</b><br />';						
+							}
+							else {
+								$this->status = $this->status . 'Created site <a href="http://' . $current_site->domain . '/' . $_POST['new_site_name'] . '" target="_blank"><b>http://'; 
+								$this->status = $this->status . $current_site->domain . '/' . $_POST['new_site_name'] . '</b></a> with ID: <b>' . $this->target_id . '</b><br />';						
+							}
 						}
 						else
 						{
@@ -286,11 +319,25 @@ class ns_cloner_free {
 					$this->dlog( 'RUNNING cloning operation<br /><br />' );
 					
 					$source_id = $_POST['source_id'];
-					$source_subd = get_blog_details($source_id)->domain;
+					// handle subdomain versus subdirectory modes
+					if ($is_subdomain) {
+						$source_subd = get_blog_details($source_id)->domain;
+					}
+					else {
+						// don't want the trailing slash in path just in case there are replacements that don't have it
+						$source_subd = get_blog_details($source_id)->domain . '/' . 
+										str_replace('/', '', get_blog_details($source_id)->path);
+					}
 					$source_site = get_blog_details($source_id)->blogname;
 					
 					$target_id = $this->target_id;
-					$target_subd = $_POST['new_site_name'] . '.' . $current_site->domain;
+					// handle subdomain versus subdirectory modes
+					if ($is_subdomain) {
+						$target_subd = $_POST['new_site_name'] . '.' . $current_site->domain;
+					}
+					else {
+						$target_subd = $current_site->domain . '/' . $_POST['new_site_name'];
+					}
 					$target_site = $_POST['new_site_title'];
 		
 					if ( $source_id == '' || $source_subd == '' || $source_site == '' || $target_id == '' || $target_subd == '' || $target_site == '') {
@@ -336,6 +383,12 @@ class ns_cloner_free {
 				}
 				$this->run_replace($target_pre, $replace_array);
 				
+				// COPY ALL MEDIA FILES 
+				$upload_dir = wp_upload_dir(); 
+				$src_blogs_dir = str_replace('uploads', 'blogs.dir/' , $upload_dir['basedir']) . $source_id;
+				$dst_blogs_dir = str_replace('uploads', 'blogs.dir/' , $upload_dir['basedir']) . $target_id;
+				$num_files = recursive_file_copy($src_blogs_dir, $dst_blogs_dir, 0);
+				$report .= ' and Copied: <b>' .$num_files . '</b> folders and files!<br />';
 				
 				// ---------------------------------------------------------------------------------------------------------------
 				// Report
@@ -560,7 +613,7 @@ class ns_cloner_free {
 		}
 		
 		if ($_POST['is_debug']) { $this->dlog ( '-----------------------------------------------------------------------------------------------------------<br /><br />'); }
-		$report .= 'Cloned: <b>' .$num_tables . '</b> tables!<br />';
+		$report .= 'Cloned: <b>' .$num_tables . '</b> tables!';
 		
 		//mysql_close($cid); 
 	}
@@ -777,7 +830,7 @@ class ns_cloner_free {
 
 			while ($row = mysql_fetch_array($data)) {
 
-				// Initialise the UPDATE string we're going to build, and we don't do an update for each damn column...
+				// Initialize the UPDATE string we're going to build, and we don't do an update for each damn column...
 				
 				$need_to_update = false;
 				$UPDATE_SQL = 'UPDATE '.$table. ' SET ';
@@ -874,7 +927,7 @@ class ns_cloner_free {
 		}
 		
 	} 
-
+	
 	/**
 	 * Log
 	 */
@@ -890,6 +943,24 @@ class ns_cloner_free {
 	}
 
 }
+	/**
+	 * Copy files and directories recursively and return number of copies executed
+	 */
+	function recursive_file_copy($src, $dst, $num) {
+		if (file_exists($dst)) rrmdir($dst);
+		$num = $num + 1;
+		if (is_dir($src)) {
+			if (!file_exists($dst)) {
+				mkdir($dst);
+			}
+			$files = scandir($src);
+			foreach ($files as $file)
+				if ($file != "." && $file != "..") $num = recursive_file_copy("$src/$file", "$dst/$file", $num); 
+		}
+		else if (file_exists($src)) copy($src, $dst);
+		return $num;
+	}
+
 
 	/**
 	 * Add admin external CSS sheet
