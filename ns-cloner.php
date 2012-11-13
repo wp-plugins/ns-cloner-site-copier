@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.2
+Version: 2.1.3
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -43,13 +43,13 @@ define( 'NS_CLONER_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 // GLOBALS
 
-// Database Settings assigned from WordPress Globals
+// Database Settings assigned from WordPress Globals in wp-config.php
 $host = DB_HOST;        
 $db   = DB_NAME;     
 $usr  = DB_USER;		
 $pwd  = DB_PASSWORD;  
 
-// Multisite Mode; false = subdirs
+// Multisite Mode; false = subdirs; from WordPress Globals in wp-config.php
 $is_subdomain = SUBDOMAIN_INSTALL;
 
 // Report about what was accomplished
@@ -63,7 +63,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.2';
+	var $version = '2.1.3';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -122,7 +122,7 @@ class ns_cloner_free {
 	 * Admin Interface
 	 */
 	function page_main_output() {
-		global $wpdb, $wp_roles, $current_user, $current_site;
+		global $wpdb, $wp_roles, $current_user, $current_site, $is_subdomain;
 		
 		if( !current_user_can( $this->capability ) ) {
 			echo '<p>' . __( 'You do not have permissions to do that...', 'ns_cloner' ) . '</p>'; // If accessed properly, this message doesn't appear.
@@ -163,7 +163,6 @@ class ns_cloner_free {
 							<h2 class="cloner-step before-clone-title">Status</h2>
 						<?php } ?>
 					</div>
-					
 					<span class="colorRed">
 						<h2 class="cloner-step">STEP 1: <span>Pick an existing site to clone</span></h2>
 						<p><select id="source_id" name="source_id">
@@ -189,7 +188,7 @@ class ns_cloner_free {
 					</span>
 										
 					<h2 class="cloner-step">STEP 2: <span>Give the new site a Name</span></h2>
-					<?php if($is_subdomain) { ?>
+					<?php if($is_subdomain == true) { ?>
 					<p><input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>"/>.<?php echo $current_site->domain; ?></p>
 					<?php } else { ?>
 					<p><?php echo $current_site->domain; ?>/<input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>" /></p>					
@@ -257,7 +256,7 @@ class ns_cloner_free {
 	 * Execute actions
 	 */
 	function admin_init() {
-		global $wpdb, $report, $count_tables_checked, $count_items_checked, $count_items_changed, $current_site;
+		global $wpdb, $report, $count_tables_checked, $count_items_checked, $count_items_changed, $current_site, $is_subdomain;
 		
 		$page = isset( $_GET[ 'page' ] ) ? $_GET[ 'page' ] : '';
 		if( 'ns-cloner' !== $page ) // stop function execution if not on plugin page

@@ -74,6 +74,9 @@ We're working hard on this! We are going to release several powerful features wi
 
 == Changelog ==
 
+= 2.1.3 =
+* Fixed bug in 2.1.2 that forced subdirectory mode
+
 = 2.1.2 =
 * Added Auto-detect of Multisite mode and Subdirectory site support!
 * Added Automatic Copy of all media files in blogs.dir/##
@@ -86,3 +89,6 @@ We're working hard on this! We are going to release several powerful features wi
 
 = 2.1.1 =
 First public release
+
+= 2.1.3 =
+Fixed bug in 2.1.2 that forced subdirectory mode - if you updated to 2.1.2 please update to 2.1.3 immediately.
