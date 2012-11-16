@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 	5. Clone onto pre-existing sites
 	6. Add detailed debug info mode option
 	7. Add configuration options and save defaults for all settings
+	8. Add default settings and hook into new registration
 */
 
 define( 'NS_CLONER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -238,6 +239,7 @@ class ns_cloner_free {
 					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="text-align: center;">
 						<input type="hidden" name="cmd" value="_s-xclick">
 						<input type="hidden" name="hosted_button_id" value="53JXD4ENC8MM2">
+						<input type="hidden" name="rm" value="2" >
 						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
 						<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
 					</form>
