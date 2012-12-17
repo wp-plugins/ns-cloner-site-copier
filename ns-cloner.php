@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.3
+Version: 2.1.4
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -26,6 +26,13 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+/* 
+This plugin uses code from db_backup (Alain Wolf, Zurich - Switzerland, GPLv2) 
+rewritten by Andrew Lundquist (neversettle.it) to take the database backup 
+script generation and automate the cloning process from scripts into queries
+Original db_backup website: http://restkultur.ch/personal/wolf/scripts/db_backup/
 */
 
 /* Pro Version To Do:
@@ -64,7 +71,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.3';
+	var $version = '2.1.4';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -146,9 +153,9 @@ class ns_cloner_free {
 		// debug
 		//echo $_SERVER['REQUEST_URI'];
 
-		// Main UI Form
+		// Main UI Page
 		echo '<div class="wrap">';
-			?>
+		?>
 			<!-- <h1 class="cloner-title">NS Cloner</h1> -->
 			<img class="cloner-banner" alt="Never Settle Cloner Title Banner" src="<?php echo $this->banner_img ?>" />
 			<form action="?page=ns-cloner&action=process" method="post" enctype="multipart/form-data">
@@ -206,7 +213,7 @@ class ns_cloner_free {
 						<input id="is_create" name="is_create" type="hidden" value="True"/>
 						<input id="is_clone" name="is_clone" type="hidden" value="True"/>
 						<p class="submit no-border">
-							  <input name="Submit" value="<?php _e( 'Clone Away you Wee Fairy! &raquo;', 'ns_cloner' ) ?>" type="submit" /><br /><br />
+							  <input name="Submit" value="<?php _e( 'Never Settle and Clone Away! &raquo;', 'ns_cloner' ) ?>" type="submit" /><br /><br />
 							<i class="warning-txt"><span class="warning-txt-title">***WARNING:</span> We have made an incredibly complex process ridiculously easy with this powerful plugin. We have tested thoroughly and used this exact tool in our own live multisite environments. However, our comfort level should not dictate your precautions. If you're confident in your testing and the back-up scheme that you should have in place anyway, then by all means - start cloning like there's no tomorrow!</i>
 						</p>
 				</div>
@@ -471,8 +478,6 @@ class ns_cloner_free {
 			if( false == $user_id ) {
 				die( '<p>' . __( 'There was an error creating a user', 'ns_cloner' ) . '</p>' );
 			} else {
-				// notification disabled for now as this is an internal tool
-				//wp_new_user_notification( $user_id, $create_user_pass );
 				$this->log( "User: $create_user_name created with Password: $create_user_pass" );
 			}
 		}
@@ -540,9 +545,6 @@ class ns_cloner_free {
 		} else {
 			// add the user
 			add_user_to_blog( $this->target_id, $user_id, $userrole );
-			// notification disabled for now as this is an internal tool
-			//wpmu_welcome_user_notification($user_id, $user_password, '');
-			//wp_new_user_notification($user_id, $user_password);
 			$this->status = $this->status . 'Added user: <b>' . $username . ' | ' . $useremail . '</b>';
 			if ($is_new_user) {
 				$this->status = $this->status . " created with Password: $userpass";
@@ -623,7 +625,7 @@ class ns_cloner_free {
 	{
 		/*
 			Add backqouotes to tables and db-names in
-			SQL queries. Taken from phpMyAdmin.
+			SQL queries. Example from phpMyAdmin.
 		*/
 		if (!empty($a_name) && $a_name != '*') {
 			if (is_array($a_name)) {
@@ -645,7 +647,7 @@ class ns_cloner_free {
 	{
 		/*
 			Better addslashes for SQL queries.
-			Taken from phpMyAdmin.
+			Example from phpMyAdmin.
 		*/
 		if ($is_like) {
 			$a_string = str_replace('\\', '\\\\\\\\', $a_string);
@@ -843,7 +845,6 @@ class ns_cloner_free {
 					
 					// -- PROCESS THE SEARCH ARRAY --
 					foreach( $replace_array as $search_for => $replace_with) {
-						
 						$j++;
 						$count_items_checked++;
 
@@ -893,9 +894,8 @@ class ns_cloner_free {
 						}
 						
 					}
-					//-- SEARCH ARRAY COMPLETE -----------------------------
+					//-- SEARCH ARRAY COMPLETE ----------------------------------------------------------------------
 				}
-				
 				if ($need_to_update) {
 					$count_updates_run;
 					$WHERE_SQL = substr($WHERE_SQL,0,-4); // strip off the excess AND - the easiest way to code this without extra flags, etc.
@@ -906,16 +906,15 @@ class ns_cloner_free {
 					$this->dlog (("<br /><b>ERROR: </b>" . mysql_error() . "<br/>$UPDATE_SQL<br/>")); } 
 				}
 			}
-			/*		
-			------------------------------------------------------------------------------------------------------------------*/
+			/*---------------------------------------------------------------------------------------------------------*/
 		}
 		mysql_close($cid); 
 	}
 
 	function recursive_array_replace($find, $replace, &$data) {
-		
 		if (is_array($data)) {
 			foreach ($data as $key => $value) {
+				// check for an array for recursion
 				if (is_array($value)) {
 					$this->recursive_array_replace($find, $replace, $data[$key]);
 				} else {
@@ -926,7 +925,6 @@ class ns_cloner_free {
 		} else {
 			if (is_string($data)) $data = str_replace($find, $replace, $data);
 		}
-		
 	} 
 	
 	/**
@@ -948,7 +946,6 @@ class ns_cloner_free {
 	 * Copy files and directories recursively and return number of copies executed
 	 */
 	function recursive_file_copy($src, $dst, $num) {
-		if (file_exists($dst)) rrmdir($dst);
 		$num = $num + 1;
 		if (is_dir($src)) {
 			if (!file_exists($dst)) {

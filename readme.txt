@@ -3,7 +3,7 @@ Contributors: neversettle
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=53JXD4ENC8MM2&rm=2
 Tags: never settle, automate, duplicate, copy, copier, clone, cloner, multisite, nework, subdomain, template, developer
 Requires at least: 3.0.1
-Tested up to: 3.4.2
+Tested up to: 3.5
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -68,11 +68,17 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 We're working hard on this! We are going to release several powerful features with the first Pro verison, but if there is a specific feature that you need right away, get in touch with us and maybe we can get you an Alpha version of Pro that accomplishes what you need.
 
+= Why can't I clone the root site (ID:1)? =
+
+The tables for the root site are prefixed differently than all the other tables in sub sites and this structure doesn't lend itself to the same automation that is possible with ID > 1. We are looking into away to support this as well.
+
 == Screenshots ==
 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4 =
+* Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed
 
 = 2.1.3 =
 * Fixed bug in 2.1.2 that forced subdirectory mode
@@ -92,3 +98,6 @@ First public release
 
 = 2.1.3 =
 Fixed bug in 2.1.2 that forced subdirectory mode - if you updated to 2.1.2 please update to 2.1.3 immediately.
+
+= 2.1.4 =
+* Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed. Update to correct the issue if affected.

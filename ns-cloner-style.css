@@ -146,10 +146,12 @@ p.pro-text {
    background: #333333 !important;
    color: #ffffff;
    }
+
 .wrap .submit input:hover, .button:active {
    border-top-color: #1b435e;
    background: #1b435e;
-   }
+   cursor: pointer;
+}
 
 
 .col-right p {
