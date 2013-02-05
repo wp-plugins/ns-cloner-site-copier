@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4
+Version: 2.1.4.1
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -36,14 +36,20 @@ Original db_backup website: http://restkultur.ch/personal/wolf/scripts/db_backup
 */
 
 /* Pro Version To Do:
-	1. Make the blogs.dir copy optional
-	2. Add serialized array safe, global search and replace from source to clone
-	3. Add search and replace only mode for existing sites
-	4. Add users to the new site at clone-time
-	5. Clone onto pre-existing sites
-	6. Add detailed debug info mode option
-	7. Add configuration options and save defaults for all settings
-	8. Add default settings and hook into new registration
+	1. [DONE] Make the Upload Files copy optional
+	2. [DONE] Add serialized array safe, global search and replace from source to target
+	3. [DONE] Add search and replace only mode for existing sites
+	4. [DONE] Add option to copy all existing users to target site
+	5. [DONE] Create / Add new users to the target site at clone-time
+	6. [DONE] Clone onto pre-existing sites
+	7. [DONE] Add detailed debug info mode option
+	8. [DONE] Add ability to preserve posts on Clone Over Existing Mode
+	9. [DONE] Add ability to globally replace something in ALL tables
+	10. Add configuration options 
+	11. Remember previous settings as defaults and save
+	12. Add default settings and hook into new registration
+	13. Consolidate logging code
+	14. Add cloning between Multisite installs and servers
 */
 
 define( 'NS_CLONER_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -71,7 +77,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.4';
+	var $version = '2.1.4.1';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -177,7 +183,7 @@ class ns_cloner_free {
 						<?php
 							$blogs = $wpdb->get_results("SELECT * FROM $wpdb->blogs ORDER BY blog_id", ARRAY_A);
 							foreach($blogs as $row){
-								// blog id #1 not supported as it isn't a subsite and will cause domain name or folder issues
+								// blog id #1 not supported as it isn't a subsite and will cause domain name and folder issues
 								if 	($row['blog_id'] !== '1') {
 									$selected = '';			
 									if ($row['blog_id'] == $source_id) { $selected = ' selected="selected"'; }
@@ -206,7 +212,7 @@ class ns_cloner_free {
 					
 					<h2 class="cloner-step">STEP 4: <span>[OPTIONAL... but oh so awesome!]</span></h2>
 					<div class="cloner-pro">
-						<p class="no-border">Want to control more?<br /><b>Go pro.</b><span class="cloner-arrow"></span></p>
+						<p class="no-border">Want to control more? <b>Go pro.</b><span class="cloner-arrow"></span></p>
 					</div>
 					
 					<h2 class="cloner-step">STEP 5:</h2>
@@ -223,40 +229,50 @@ class ns_cloner_free {
 			<!-- BEGIN Right Column -->			
 				<div class="col-right">
 					<h3>Pro Features</h3>
-					<p>Want to control and automate a bunch more stuff like:</p>
+					<p>Our <a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank">Pro version</a> is NOW AVAILABLE and supports a host of amazing new features like:</p>
 					<ul>
-					<li>Clone onto pre-existing sites</li>
-					<li>Add users to the new site at clone-time</li>
-					<li>Automate safe, global search and replace into clone</li>
-					<li>Run safe, global search and replace on existing sites</li>
-					<li>Log more detailed debug info</li>
-					<li>Configure and save defaults for all settings</li>
-					<li>and many more site cloning innovations!</li>
+					<li>Cloning Modes (clone over existing &amp; search/replace only)</li>
+					<li>Global serialized-safe search and replace in ALL tables</li>
+					<li>Option to preserve or ignore posts on Clone Over Mode</li>
+					<li>Option to copy all existing users to target site</li>
+					<li>Option to copy all media files to target site or not</li>
+					<li>Option to add Detailed debug info to logging</li>
+					<li>Create / Add new admin to the target site at clone-time</li>
 					</ul> 
-					<p>???...then check out our Pro version [Coming soon!]</p>
-					
-					<p>In fact - help us finish it faster! Please donate (any amount is very appreciated), especially if you have found this useful and time=money saving!</p> 
-					
-					<p>Donate $10 or more and join our Early Adopters Club for privileged beta access and <b>LIFETIME FREE UPDATES</b> to our Pro version.</p>
-					
+
 					<p class="cloner-adopter">
-						<img alt="Never Settle Cloner Early Adopter" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/>
+						<a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank"><img alt="Never Settle Cloner Pro" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/></a>
 					</p>				
 					
-					<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="text-align: center;">
-						<input type="hidden" name="cmd" value="_s-xclick">
-						<input type="hidden" name="hosted_button_id" value="53JXD4ENC8MM2">
-						<input type="hidden" name="rm" value="2" >
-						<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-						<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-					</form>
-					<br />
-					<p><strong>Yes, we're serious!</strong> (The first 100 people to donate $10 or more will automatically become Never Settle Cloner Early Adopters).</p>
-					
-					<p>So, what are you waiting for?</p>				
+					<p>Share the Pro Version or Donate to help us continue providing support and updates to this amazing, free plugin.</p>
+					<div class="share-donate" style="text-align: center;">
+							<a class="facebook" href="http://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fneversettle.it%2Fshop%2Fns-cloner-pro%2F&t=Download+the+NS+Cloner+Pro+and+Clone+sites+with+ease%21" target="_blank">
+							<img src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/share-facebook16x16.png" /></a>
+							<a class="twitter" href="http://twitter.com/share?url=http%3A%2F%2Fneversettle.it%2Fshop%2Fns-cloner-pro%2F&text=Download+the+NS+Cloner+Pro+and+Clone+sites+with+ease%21&via=" target="_blank">
+							<img src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/share-twitter16x16.png" /></a>
+							<a class="google" href="http://plus.google.com/share?url=http%3A%2F%2Fneversettle.it%2Fshop%2Fns-cloner-pro%2F" target="_blank">
+							<img src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/share-googleplus16x16.png" /></a>
+							<a class="stumbleupon" href="http://www.stumbleupon.com/submit?url=http%3A%2F%2Fneversettle.it%2Fshop%2Fns-cloner-pro%2F&amp;title=Download+the+NS+Cloner+Pro+and+Clone+sites+with+ease%21" target="_blank">
+							<img src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/share-stumbleupon16x16.png" /></a>
+							<a class="reddit" href="http://www.reddit.com/submit?url=http%3A%2F%2Fneversettle.it%2Fshop%2Fns-cloner-pro%2F" target="_blank">
+							<img src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/share-reddit16x16.png" /></a>
+							<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+								<input type="hidden" name="cmd" value="_s-xclick">
+								<input type="hidden" name="hosted_button_id" value="53JXD4ENC8MM2">
+								<input type="hidden" name="rm" value="2" >
+								<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+								<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+							</form>
+					</div>	
+					<div class="divide"></div>
+					<div class="social-ns-pro">
+						<a target="_blank" href="http://neversettle.it/subscribe/">SUBSCRIBE</a> to stay up to date with updates, new plugins, etc.
+						<br /><br />
+						<a target="_blank" href="http://neversettle.it/"><img alt="Like Never Settle on Facebook" src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/visit-ns.png" /></a><br />
+						<a target="_blank" href="http://www.facebook.com/neversettle.it"><img alt="Like Never Settle on Facebook" src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/ns-like.png" /></a><br />
+						<a target="_blank" href="https://twitter.com/neversettleit"><img alt="Follow Never Settle on Twitter" src="<?php echo NS_CLONER_PLUGIN_URL; ?>images/ns-follow.png" /></a>
 				</div>
 				<!-- END Right Column -->
-			
 			<?php
 		echo '</div>';		
 	}
@@ -379,7 +395,12 @@ class ns_cloner_free {
 				//new-site-specific replacements
 				$replace_array[$source_subd] = $target_subd;
 				$replace_array[$source_site] = $target_site;
+				
+				//replacement for uploads location on pre 3.5 installs
 				$replace_array['blogs.dir/' . $source_id . '/'] = 'blogs.dir/' . $target_id . '/';
+				//replacement for uploads location on 3.5 and later installs
+				$replace_array['/sites/' . $source_id . '/'] = '/sites/' . $target_id . '/';
+				//this prevents issues
 				$replace_array[str_replace(' ', '%20', $source_site)] = str_replace(' ', '%20', $target_site);
 				//reset the option_name = wp_#_user_roles row in the wp_#_options table back to the id of the target site
 				$replace_array[$wpdb->base_prefix . $source_id . '_user_roles'] = $wpdb->base_prefix . $target_id . '_user_roles';
@@ -392,17 +413,30 @@ class ns_cloner_free {
 				$this->run_replace($target_pre, $replace_array);
 				
 				// COPY ALL MEDIA FILES 
-				$upload_dir = wp_upload_dir(); 
-				$src_blogs_dir = str_replace('uploads', 'blogs.dir/' , $upload_dir['basedir']) . $source_id;
-				$dst_blogs_dir = str_replace('uploads', 'blogs.dir/' , $upload_dir['basedir']) . $target_id;
-				$num_files = recursive_file_copy($src_blogs_dir, $dst_blogs_dir, 0);
-				$report .= ' and Copied: <b>' .$num_files . '</b> folders and files!<br />';
-				
+				$src_blogs_dir = get_upload_folder($source_id);
+				$dst_blogs_dir = str_replace($source_id, $target_id, $src_blogs_dir );				
+				//fix for paths on windows systems
+				if (strpos($src_blogs_dir,'/') !== false && strpos($src_blogs_dir,'\\') !== false ) {
+					$src_blogs_dir = str_replace('/', '\\', $src_blogs_dir);
+					$dst_blogs_dir = str_replace('/', '\\', $dst_blogs_dir);
+				}
+				if (is_dir($src_blogs_dir)) {
+					$num_files = recursive_file_copy($src_blogs_dir, $dst_blogs_dir, 0);
+					$report .= 'Copied: <b>' . $num_files . '</b> folders and files!<br />';
+					$this->dlog ('Copied: <b>' . $num_files . '</b> folders and files!<br />');
+					$this->dlog ('From: <b>' . $src_blogs_dir . '</b><br />');
+					$this->dlog ('To: <b>' . $dst_blogs_dir . '</b><br />');
+				}
+				else {
+					$report .= '<span class="warning-txt-title">Could not copy files</span><br />';
+					$report .= 'From: <b>' . $src_blogs_dir . '</b><br />';
+					$report .= 'To: <b>' . $dst_blogs_dir . '</b><br />';	
+				}
 				// ---------------------------------------------------------------------------------------------------------------
 				// Report
 
 				//echo '<p style="margin:auto; text-align:center">';
-				$this->dlog ( $report );
+				//$this->dlog ( $report );
 
 				//  End TIMER
 				//  ---------
@@ -616,7 +650,8 @@ class ns_cloner_free {
 		}
 		
 		if ($_POST['is_debug']) { $this->dlog ( '-----------------------------------------------------------------------------------------------------------<br /><br />'); }
-		$report .= 'Cloned: <b>' .$num_tables . '</b> tables!';
+		$report .= 'Cloned: <b>' .$num_tables . '</b> tables!<br/ >';
+		$this->dlog('Cloned: <b>' .$num_tables . '</b> tables!<br/ >');
 		
 		//mysql_close($cid); 
 	}
@@ -942,6 +977,20 @@ class ns_cloner_free {
 	}
 
 }
+	/**
+	 * Get the uploads folder for the target site
+	 */
+	function get_upload_folder($id) {
+		switch_to_blog($id);
+		$src_upload_dir = wp_upload_dir(); 
+		restore_current_blog();
+		
+		//echo $src_upload_dir['basedir'];
+		// trim '/files' off the end of loction for sites < 3.5 with old blogs.dir format
+		
+		return str_replace('/files', '', $src_upload_dir['basedir']); 
+	}
+
 	/**
 	 * Copy files and directories recursively and return number of copies executed
 	 */

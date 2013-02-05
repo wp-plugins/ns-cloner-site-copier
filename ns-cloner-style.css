@@ -29,7 +29,10 @@
 .col-right ul {
 	list-style: disc !important;
 	padding: 0 0 0 20px;
-	
+}
+
+.col-right input {
+	margin: 5px;
 }
 
 .row-center-span {
@@ -104,7 +107,8 @@
 	-moz-border-radius: 10px;
 	-webkit-border-radius: 10px;
 	border-radius: 10px; /* future proofing */
-	-khtml-border-radius: 10px; /* for old Konqueror browsers */}
+	-khtml-border-radius: 10px; /* for old Konqueror browsers */
+}
 
 .cloner-arrow {
 	width: 0; 
@@ -113,7 +117,7 @@
 	border-bottom: 15px solid transparent;
 	border-left: 15px solid #666;
 	float: right;
-	margin: -13px -5px 0 0;
+	margin: -5px -11px 0 0;
 }
 
 p.pro-text {
@@ -139,20 +143,23 @@ p.pro-text {
 	background: -ms-linear-gradient(top, #3399cc, #0d5275);
 	background: -o-linear-gradient(top, #3399cc, #0d5275);
 	text-shadow: 1px 1px 1px #000;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px; /* future proofing */
+	-khtml-border-radius: 10px; /* for old Konqueror browsers */
 }
 
 .wrap .submit input:hover, .button:hover {
    border-top-color: #333333;
    background: #333333 !important;
    color: #ffffff;
-   }
+}
 
 .wrap .submit input:hover, .button:active {
    border-top-color: #1b435e;
    background: #1b435e;
    cursor: pointer;
 }
-
 
 .col-right p {
 	padding: 3px 0 !important;
@@ -172,4 +179,44 @@ p.pro-text {
 .warning-txt span {
 	font-weight: bold;
 	color: red;
+}
+
+.cloner-txt {
+	position: relative;
+	top: 5px;
+}
+
+#search-replace, #add-admin {
+	margin: 10px 0 0 0;
+}
+
+.share-ns-pro a {
+	margin-right: 3px;
+}
+
+.social-ns-pro h2 {
+	padding: 0 0 10px 0;
+}
+
+.social-ns-pro a:hover {
+	zoom: 1;
+	filter: alpha(opacity=50);
+	opacity: 0.5;
+}
+
+.divide {
+	width: 100%;
+	float: left;
+	clear: both;
+	border-top: 1px solid #CCC;
+	margin-top: 5px;
+	padding: 0 0 15px 0;
+}
+
+h2.no-pad {
+	padding: 0;
+}
+
+.social-ns-pro img {
+	max-width: 100%;
 }

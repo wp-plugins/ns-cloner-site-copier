@@ -3,7 +3,7 @@ Contributors: neversettle
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=53JXD4ENC8MM2&rm=2
 Tags: never settle, automate, duplicate, copy, copier, clone, cloner, multisite, nework, subdomain, template, developer
 Requires at least: 3.0.1
-Tested up to: 3.5
+Tested up to: 3.5.1
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -66,7 +66,7 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 = When will the Pro version be available? =
 
-We're working hard on this! We are going to release several powerful features with the first Pro verison, but if there is a specific feature that you need right away, get in touch with us and maybe we can get you an Alpha version of Pro that accomplishes what you need.
+Wait no longer! It's here: http://neversettle.it/shop/ns-cloner-pro/
 
 = Why can't I clone the root site (ID:1)? =
 
@@ -77,6 +77,10 @@ The tables for the root site are prefixed differently than all the other tables 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.1 =
+* Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs.
+* ANNOUNCING NS Cloner Pro is now Available
+
 = 2.1.4 =
 * Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed
 
@@ -101,3 +105,6 @@ Fixed bug in 2.1.2 that forced subdirectory mode - if you updated to 2.1.2 pleas
 
 = 2.1.4 =
 * Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed. Update to correct the issue if affected.
+
+= 2.1.4.1 =
+* Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs. This should correct issues with the media file copes! Please update ASAP.
