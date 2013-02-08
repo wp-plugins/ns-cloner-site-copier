@@ -72,6 +72,12 @@ Wait no longer! It's here: http://neversettle.it/shop/ns-cloner-pro/
 
 The tables for the root site are prefixed differently than all the other tables in sub sites and this structure doesn't lend itself to the same automation that is possible with ID > 1. We are looking into away to support this as well.
 
+= Why aren't my images or files being copied to the new cloned site? =
+
+The Cloner looks for your media files and uploads in the standard, default directories depending on WP version number. If you have set a custom upload location and/or if another plugin or theme has altered that upload location dynamically, it might not be able to automatically copy the files and/or update the URLs. Please check to make sure that your uploads are in the standard locations:
+* ../wp-content/blogs.dir/ID for < 3.5
+* ../wp-content/uploads/sites/ID for >= 3.5
+
 == Screenshots ==
 
 1. The NS Cloner in all its simple, user-friendly glory
