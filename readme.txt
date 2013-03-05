@@ -66,26 +66,23 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 = When will the Pro version be available? =
 
-Wait no longer! It's here: http://neversettle.it/shop/ns-cloner-pro/
+Wait no longer! It's here: http://neversettle.it/ns-cloner-pro/
 
 = Why can't I clone the root site (ID:1)? =
 
 The tables for the root site are prefixed differently than all the other tables in sub sites and this structure doesn't lend itself to the same automation that is possible with ID > 1. We are looking into away to support this as well.
-
-= Why aren't my images or files being copied to the new cloned site? =
-
-The Cloner looks for your media files and uploads in the standard, default directories depending on WP version number. If you have set a custom upload location and/or if another plugin or theme has altered that upload location dynamically, it might not be able to automatically copy the files and/or update the URLs. Please check to make sure that your uploads are in the standard locations:
-* ../wp-content/blogs.dir/ID for < 3.5
-* ../wp-content/uploads/sites/ID for >= 3.5
 
 == Screenshots ==
 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.2 =
+* Fixed bug reported by Christian (Thank you!) where some upload file paths containing the same numbers as site IDs were getting mangled
+
 = 2.1.4.1 =
-* Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs.
-* ANNOUNCING NS Cloner Pro is now Available
+* Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs
+* ANNOUNCING NS Cloner Pro is now Available at http://neversettle.it/ns-cloner-pro/
 
 = 2.1.4 =
 * Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed
