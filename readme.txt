@@ -16,6 +16,10 @@ This is by far the easiest, fastest, and most user-friendly way you will ever cr
 
 The NS Cloner will take any existing site on your WordPress multisite network and clone it into a new site that is completely identical in theme & theme settings, plugins & plugin configurations, content, pictures, videos, and site settings. **Everything** is preserved and intelligent replacements are made so that the new site settings reflect your choices for the name and title of the new site as well as other automated background housekeeping to make sure the new site works exactly the same way as if you had taken the time to set it all up manually.
 
+If you want even more functionality, check out our Pro version!
+http://neversettle.it/ns-cloner-pro/
+SPRING SALE - SAVE 25% at checkout until May 7th by using the coupon code: springfling
+
 = Standard Precautions and Notes =
 * This plugin ONLY works on WordPress Multisite and is not for use on single site installations. 
 * It now supports both subdomain and subdirectory mode! It will auto-detect and auto-render appropriate UI.
@@ -77,6 +81,9 @@ The tables for the root site are prefixed differently than all the other tables 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.3 =
+* Added better media file copy handling in cases where themes or plugins alter wp_upload_dir() and it is returning bad paths
+
 = 2.1.4.2 =
 * Fixed bug reported by Christian (Thank you!) where some upload file paths containing the same numbers as site IDs were getting mangled
 
