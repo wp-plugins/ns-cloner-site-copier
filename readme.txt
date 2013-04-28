@@ -81,6 +81,9 @@ The tables for the root site are prefixed differently than all the other tables 
 1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.4 =
+* Enhanced media file copy handling from 2.1.4.3
+
 = 2.1.4.3 =
 * Added better media file copy handling in cases where themes or plugins alter wp_upload_dir() and it is returning bad paths
 
