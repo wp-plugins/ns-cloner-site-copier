@@ -72,9 +72,9 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 Wait no longer! It's here: http://neversettle.it/ns-cloner-pro/
 
-= Why can't I clone the root site (ID:1)? =
+= Why can't I clone the root site (ID:1) - why doesn’t the main site show up in the drop-down? =
 
-The tables for the root site are prefixed differently than all the other tables in sub sites and this structure doesn't lend itself to the same automation that is possible with ID > 1. We are looking into away to support this as well.
+Unfortunately the Multisite database structure does not lend itself to automating cloning on the main site. All subsites create new tables that are numbered with the site ID. However, the main site’s tables are not numbered and are mixed in with other global network tables. It gets even more complicated when other plugins install there own tables. There’s no simple way to know what tables in the database should be cloned or not for the main site whereas it is very straight forward for subsites because they are numbered with the site ID.
 
 == Screenshots ==
 
