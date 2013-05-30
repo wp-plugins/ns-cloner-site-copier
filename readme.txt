@@ -18,13 +18,16 @@ The NS Cloner will take any existing site on your WordPress multisite network an
 
 If you want even more functionality, check out our Pro version!
 http://neversettle.it/ns-cloner-pro/
-SPRING SALE - SAVE 25% at checkout until May 7th by using the coupon code: springfling
 
-= Standard Precautions and Notes =
-* This plugin ONLY works on WordPress Multisite and is not for use on single site installations. 
+= Standard Precautions, Notes, and Tips =
+* This plugin ONLY works on WordPress Multisite and is not for use on single site installations
 * It now supports both subdomain and subdirectory mode! It will auto-detect and auto-render appropriate UI.
-* We have used the NS Cloner on production systems for months and months without issue. That doesn't mean your scenario won't find some new condition that could cause you some headaches. Unlikey, but always possible. We recommend getting familiar with it on a test system before you deploy it to a critical network.
-* And for the love - backup your data. This plugin operates at the database level to work its magic. We've run it hundreds of times on our own sites and client sites, and tested it thoroughly. It's safe. But don't take our word for it.
+* It might have unpredictable results on multisite networks installed in a subdirectory of a domain. If your root network site lives at domain.com/wordpress or something similar, you might experience issues. More info here.
+* Use only lower case in step #2 for the target site name field
+* Make sure that the name of the site that you are cloning is NOT the same as its title. For example, if you select a master source site to clone that is site1.domain.com or domain.com/site1 you need to make sure that its title in Settings > General is NOT “Site1? or “site1? [without quotes of course]
+* Also make sure that the name of the source site is not contained in the name of the target site
+* We have used the NS Cloner on production systems for months and months without issue. That doesn’t mean your scenario won’t find some new condition that could cause you some headaches. Unlikely, but always possible. We recommend getting familiar with it on a test system before you deploy it to a critical network.
+* And for the love - backup your data. This plugin operates at the database level to work its magic. We’ve run it hundreds of times on our own sites and client sites, and tested it thoroughly. It’s safe. But don’t take our word for it.
 
 = Typical Workflow for using the NS Cloner =
 1. Set up 1 or more "template" sites exactly the way you want your clones to start out
@@ -59,6 +62,8 @@ Yes, it really is that easy.
 1. Access the NS Cloner tool in the Network Sites Menu
 
 == Frequently Asked Questions ==
+
+Please also carefully check out the Standard Precautions, Notes, and Tips on the main description.
 
 = Does the NS Cloner work on subdomain networks as well as subfolder networks? =
 
