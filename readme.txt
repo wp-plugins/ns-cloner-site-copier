@@ -61,6 +61,10 @@ Yes, it really is that easy.
 1. Network Activate the plugin through the 'Plugins' menu in WordPress
 1. Access the NS Cloner tool in the Network Sites Menu
 
+<img class="screenshot" src="http://s-plugins.wordpress.org/ns-cloner-site-copier/assets/screenshot-1.png?rev=728680" alt="ns-cloner-site-copier screenshot 1">
+
+<img class="screenshot" src="http://s-plugins.wordpress.org/ns-cloner-site-copier/assets/screenshot-2.png?rev=728680" alt="ns-cloner-site-copier screenshot 2">
+
 == Frequently Asked Questions ==
 
 Please also carefully check out the Standard Precautions, Notes, and Tips on the main description.
