@@ -83,7 +83,9 @@ Unfortunately the Multisite database structure does not lend itself to automatin
 
 == Screenshots ==
 
-1. The NS Cloner in all its simple, user-friendly glory
+1. Access the Network Admin area to find the NS Cloner since it works at the Network level of Multisite
+2. Here's the NS Cloner in the Menus
+3. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
 = 2.1.4.4 =
