@@ -86,7 +86,7 @@ Usually this means that the clone operation did not complete successfully. The m
 == Screenshots ==
 
 1. Navigating to the Network Admin area
-2. NS Cloner Pro and NS Cloner in the Sites menu area
+2. NS Cloner Pro and NS Cloner in the Sites Menu of Network Admin
 3. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
