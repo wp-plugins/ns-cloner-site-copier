@@ -3,7 +3,7 @@ Contributors: neversettle
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=53JXD4ENC8MM2&rm=2
 Tags: never settle, automate, duplicate, copy, copier, clone, cloner, multisite, nework, subdomain, template, developer
 Requires at least: 3.0.1
-Tested up to: 3.5.1
+Tested up to: 3.6
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -19,14 +19,12 @@ The NS Cloner will take any existing site on your WordPress multisite network an
 If you want even more functionality, check out our Pro version!
 http://neversettle.it/ns-cloner-pro/
 
-= Standard Precautions, Notes, and Tips =
-* This plugin ONLY works on WordPress Multisite and is not for use on single site installations
+= Standard Precautions and Notes =
+* This plugin ONLY works on WordPress Multisite and is not for use on single site installations. 
 * It now supports both subdomain and subdirectory mode! It will auto-detect and auto-render appropriate UI.
-* It might have unpredictable results on multisite networks installed in a subdirectory of a domain. If your root network site lives at domain.com/wordpress or something similar, you might experience issues. More info here: http://wordpress.org/support/topic/new-site-url-same-as-cloned-site
-* Use only lower case in step #2 for the target site name field
-* Make sure that the name of the site that you are cloning is NOT the same as its title. For example, if you select a master source site to clone that is site1.domain.com or domain.com/site1 you need to make sure that its title in Settings > General is NOT "Site1" or "site1" [without quotes of course]
-* Also make sure that the name of the source site is not contained in the name of the target site
-* We have used the NS Cloner on production systems for months and months without issue. That doesn't mean your scenario won't find some new condition that could cause you some headaches. Unlikely, but always possible. We recommend getting familiar with it on a test system before you deploy it to a critical network.
+* It now supports cloning the root site at ID=1! But please be especially careful with this feature. Multisite plugins like BuddyPress add tables at the main (wp_) level of the database. There are also several global tables that apply to the network and NOT to the core site. We are supporting an exclusion on these global tables and BuddyPress tables out of the gate so that they don't get cloned to all your new sites which will have wp_ID_ as a prefix instead of wp_. But tables for other network level plugins that don't apply to the clone could still get coppied by the Cloner due to its automation and inability to be aware of the table structure of every plugin out there. 
+* We always try to help, but we cannot promise support to users for this Free version especially related to cloning the root site do to the potential complexities involved from environment to environment.
+* We have used the NS Cloner on production systems for months and months without issue. That doesn't mean your scenario won't find some new condition that could cause you some headaches. Unlikey, but always possible. We recommend getting familiar with it on a test system before you deploy it to a critical network.
 * And for the love - backup your data. This plugin operates at the database level to work its magic. We've run it hundreds of times on our own sites and client sites, and tested it thoroughly. It's safe. But don't take our word for it.
 
 = Typical Workflow for using the NS Cloner =
@@ -61,17 +59,11 @@ Yes, it really is that easy.
 1. Network Activate the plugin through the 'Plugins' menu in WordPress
 1. Access the NS Cloner tool in the Network Sites Menu
 
-<img class="screenshot" src="http://s-plugins.wordpress.org/ns-cloner-site-copier/assets/screenshot-1.png?rev=728680" alt="ns-cloner-site-copier screenshot 1">
-
-<img class="screenshot" src="http://s-plugins.wordpress.org/ns-cloner-site-copier/assets/screenshot-2.png?rev=728680" alt="ns-cloner-site-copier screenshot 2">
-
 == Frequently Asked Questions ==
-
-Please also carefully check out the Standard Precautions, Notes, and Tips on the main description.
 
 = Does the NS Cloner work on subdomain networks as well as subfolder networks? =
 
-YES! We have just added this functionality.
+YES! We have added this functionality.
 
 = When I click the "Clone Away" submit button, the new site is created, but the response generates a 404 page not found? =
 
@@ -81,17 +73,31 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 Wait no longer! It's here: http://neversettle.it/ns-cloner-pro/
 
-= Why can't I clone the root site (ID:1) - why doesn't the main site show up in the drop-down? =
+= Can I clone the root site (ID=1)? =
 
-Unfortunately the Multisite database structure does not lend itself to automating cloning on the main site. All subsites create new tables that are numbered with the site ID. However, the main site's tables are not numbered and are mixed in with other global network tables. It gets even more complicated when other plugins install there own tables. There's no simple way to know what tables in the database should be cloned or not for the main site whereas it is very straight forward for subsites because they are numbered with the site ID.
+Prior to 2.1.4.5 the answer was no. The tables for the root site are prefixed differently than all the other tables in sub sites and this structure doesn't lend itself to the same automation that is possible with ID > 1. 
+
+HOWEVER!!! We put a lot of effort into this and have built checks and conditions for the most common scenarios, and now as of version 2.1.4.5 you CAN clone the root site with ID=1.
+
+= Why do I get a white screen after cloning a site? =
+
+Usually this means that the clone operation did not complete successfully. The most common cause for this is a script timeout. By default, PHP script execution for a single script is set to 30 seconds. This might not be enough time for larger sites with numerous posts, pages, and users to complete cloning - especially since the Cloner runs advanced search and replace operations against every table cloned to the new site to make sure that it reflects the new site url and title throughout all its data. Try increasing the max_execution_time in php.ini or wherever your host supports updating PHP configuration settings.
 
 == Screenshots ==
 
-1. Access the Network Admin area to find the NS Cloner since it works at the Network level of Multisite
-2. Here's the NS Cloner in the Menus
-3. The NS Cloner in all its simple, user-friendly glory
+1. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.5 =
+* Added support for cloning the root site with ID 1 (YAY! PLEASE SEE STANDARD PRECAUTIONS AND NOTES ON DESCRIPTION PAGE)
+* Added support for WP Multisite when installed in a subdirectory rather than at the root of a domain (there were previously issues in this scenario)
+* Added validation to enforce lowercase and only allowed characters in the site name field
+* Added validation to enforce replacement rules that aren't always obvious (you don't want the old site name to be contained in the new site domain or the cloner's automated data replacement will corrupt your new clone's data)
+* Fixed permalink bug in subdirectory mode
+* Updated the way the status is returned after cloning to fix issues where the status exceeds URL length restrictions
+* [EXPERIMENTAL] Added support for the ThreeWP Broadcast plugin based on user contribution (thank you John @ propanestudio.com and Aamir!)
+* Many other small tweaks, updates, and fixes
+
 = 2.1.4.4 =
 * Enhanced media file copy handling from 2.1.4.3
 
@@ -125,10 +131,14 @@ Unfortunately the Multisite database structure does not lend itself to automatin
 First public release
 
 = 2.1.3 =
-Fixed bug in 2.1.2 that forced subdirectory mode - if you updated to 2.1.2 please update to 2.1.3 immediately.
+* Fixed bug in 2.1.2 that forced subdirectory mode - if you updated to 2.1.2 please update to 2.1.3 immediately.
 
 = 2.1.4 =
 * Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed. Update to correct the issue if affected.
 
 = 2.1.4.1 =
 * Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs. This should correct issues with the media file copes! Please update ASAP.
+
+= 2.1.4.5 =
+* Added validation to prevent unsafe values for certain fields like site name
+* Updated deprecated function calls and fixed several critical bugs affecting certain scenarios like when WP Multisite is installed in a subdirectory (not to be confused with simply running in subdirectory mode)

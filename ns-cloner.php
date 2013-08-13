@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4.4
+Version: 2.1.4.5
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -72,12 +72,16 @@ $count_tables_checked;
 $count_items_checked;
 $count_items_changed;	
 
+// Start session
+if ( !session_id() )
+	session_start();
+
 class ns_cloner_free {
 
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.4.4';
+	var $version = '2.1.4.5';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -88,6 +92,7 @@ class ns_cloner_free {
 	var $capability = '';
 	var $target_id = '';
 	var $status = '';
+	var $global_tables;
 
 	/**
 	 * PHP5 constructor
@@ -102,7 +107,15 @@ class ns_cloner_free {
 		$this->log_file_url = NS_CLONER_PLUGIN_URL . 'logs/ns-cloner.log';
 		$this->detail_log_file = NS_CLONER_PLUGIN_DIR . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html';
 		$this->detail_log_file_url = NS_CLONER_PLUGIN_URL . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html';
-
+		
+		//define which tables to skip by default when cloning root site
+		$this->global_tables = array(
+			'blogs','blog_versions','registration_log','signups','site','sitemeta', //default multisite tables
+			'usermeta','users', //don't copy users
+			'bp_.*', //buddypress tables
+			'3wp_broadcast_.*' //3wp broadcast tables
+		);
+		
 		add_action( 'admin_notices', array( $this, 'check_logfile' ) );
 		add_action( 'admin_init', array( $this, 'admin_init' ) );
 		
@@ -148,13 +161,13 @@ class ns_cloner_free {
 		// ---------------------------------------------------------------------------------
 
 		$abort = false;
-		$source_id = '2';
+		$source_id = '1';
 
 		if ( isset( $_GET['error'] ) )
-			echo '<div id="errmessage" class="error"><p>' . stripslashes( urldecode( $_GET['errormsg'] ) ) . '</p></div>';
+			echo '<div id="errmessage" class="ns-message error"><p>' . stripslashes( urldecode( $_GET['errormsg'] ) ) . '</p></div>';
 		
 		if ( isset( $_GET['updated'] ) )
-			echo '<div id="message" class="updated fade"><p>' . stripslashes( urldecode( $_GET['updatedmsg'] ) ) . '</p></div>';
+			echo '<div id="message" class="ns-message updated fade"><p>' . stripslashes( urldecode( $_SESSION['cloner_status'] ) ) . '</p></div>';
 		
 		// debug
 		//echo $_SERVER['REQUEST_URI'];
@@ -162,14 +175,27 @@ class ns_cloner_free {
 		// Main UI Page
 		echo '<div class="wrap">';
 		?>
+			<script>				
+				//Update stuff
+				jQuery(function($){
+					$("#source_id").change(function(){
+						var source = $(this);
+						if (source.val() == 1)
+							$("#clone-root-warning").show();
+						else
+							$("#clone-root-warning").hide();
+					})
+				})
+			</script>
+			
 			<!-- <h1 class="cloner-title">NS Cloner</h1> -->
 			<img class="cloner-banner" alt="Never Settle Cloner Title Banner" src="<?php echo $this->banner_img ?>" />
 			
 			<!-- BEGIN Left Column -->
+		<form action="?page=ns-cloner&action=process" method="post" enctype="multipart/form-data">
 			<div class="col-left">
-				<form action="?page=ns-cloner&action=process" method="post" enctype="multipart/form-data">
 					<div class="before-clone">
-						<?php if (!isset($_GET['updatedmsg']) && !isset($_GET['errormsg'])) { ?>
+						<?php if (!isset($_GET['updated']) && !isset($_GET['errormsg'])) { ?>
 							<h2 class="cloner-step before-clone-title">Before you begin</h2>
 							<p>If you haven't already, now is a great time to set up a "template" site exactly the way you want the new clone site to start out (theme, plugins, settings, etc.).</p>
 						<?php } else { ?>
@@ -182,29 +208,35 @@ class ns_cloner_free {
 						<?php
 							$blogs = $wpdb->get_results("SELECT * FROM $wpdb->blogs ORDER BY blog_id", ARRAY_A);
 							foreach($blogs as $row){
-								// blog id #1 not supported as it isn't a subsite and will cause domain name and folder issues
-								if 	($row['blog_id'] !== '1') {
-									$selected = '';			
-									if ($row['blog_id'] == $source_id) { $selected = ' selected="selected"'; }
-									if ($is_subdomain) {
-										echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
-											get_blog_details($row['blog_id'])->blogname . ' ('. $row['domain'] .')</option>';
-									}
-									else { // subdirectory mode
-										echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
-											get_blog_details($row['blog_id'])->blogname . ' ('. $row['domain'] . $row['path'] . ')</option>';
-									}	
+								// blog id #1 now supported 								
+								$selected = '';			
+								if ($row['blog_id'] == $source_id) { $selected = ' selected="selected"'; }
+								if ($is_subdomain) {
+									echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
+										substr(get_blog_details($row['blog_id'])->blogname, 0, 30) . '... ('. $row['domain'] .')</option>';
 								}
+								else { // subdirectory mode
+									echo '<option value="' . $row['blog_id'] . '"' . $selected . '>' . $row['blog_id'] . ' - ' .	
+										substr(get_blog_details($row['blog_id'])->blogname, 0, 30) . '... ('. $row['domain'] . $row['path'] . ')</option>';
+								}	
 							}			
 						?>
-						</select></p>
+						</select>
+						<br />
+						<i id="clone-root-warning" class="warning-txt"><span class="warning-txt-title">***WARNING:</span>
+							Cloning the root site (ID=1) can be quirky depending on your setup. Clones can end up with 
+							copies of extra tables if you are using a plugin that has global db tables. We always try to help, 
+							but we cannot promise support for this feature. Excercise caution! Back up your database and your 
+							entire uploads folder before running this until you are comfortable with how it works for your network.
+						</i>
+						</p>
 					</span>
 										
 					<h2 class="cloner-step">STEP 2: <span>Give the new site a Name</span></h2>
 					<?php if($is_subdomain == true) { ?>
 					<p><input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>"/>.<?php echo $current_site->domain; ?></p>
 					<?php } else { ?>
-					<p><?php echo $current_site->domain; ?>/<input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>" /></p>					
+					<p><?php echo DOMAIN_CURRENT_SITE . PATH_CURRENT_SITE; ?><input id="new_site_name" name="new_site_name" type="text" value="<?php echo $_POST['new_site_name']; ?>" /></p>					
 					<?php } ?>
 					<h2 class="cloner-step">STEP 3: <span>Give the new site a Title</span></h2>
 					<p><input id="new_site_title" name="new_site_title" value="<?php echo $_POST['new_site_title']; ?>" type="text" style="width: 300px;"/></p>
@@ -221,15 +253,18 @@ class ns_cloner_free {
 							  <input name="Submit" value="<?php _e( 'Never Settle and Clone Away! &raquo;', 'ns_cloner' ) ?>" type="submit" /><br /><br />
 							<i class="warning-txt"><span class="warning-txt-title">***WARNING:</span> We have made an incredibly complex process ridiculously easy with this powerful plugin. We have tested thoroughly and used this exact tool in our own live multisite environments. However, our comfort level should not dictate your precautions. If you're confident in your testing and the back-up scheme that you should have in place anyway, then by all means - start cloning like there's no tomorrow!</i>
 						</p>
-				</form>
 				<div class="divide"></div>
+			</div>
+		</form>	
+			<!-- END Left Column -->
+			<!-- BEGIN Right Column -->			
+				<div class="col-right">
 					<table border="0">
 						<tr>
 						<td align="center" valign="top">
-						<p style="font-size:12.5pt;">
-							Share the Pro Version!!!
-							<br />
-							OR donate to help us continue providing support and updates to this amazing, free plugin.</p>
+						<p style="font-size:11pt;">
+							If you find it useful, please <a target="_blank" href="http://wordpress.org/support/view/plugin-reviews/ns-cloner-site-copier?rate=5#postform">RATE IT</a> with 5-stars, share the Pro Version,
+							and / or donate to help us continue providing support and updates to this amazing, free plugin!</p>
 						</td>
 						<td style="margin-left: 10px;">
 						<div class="share-donate" style="text-align: center; float: left;">
@@ -254,10 +289,7 @@ class ns_cloner_free {
 						</td>
 						</tr>
 					</table>
-			</div>
-			<!-- END Left Column -->
-			<!-- BEGIN Right Column -->			
-				<div class="col-right">
+					<div class="divide"></div>
 					<h3>Pro Features</h3>
 					<p>Our <a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank">Pro version</a> is NOW AVAILABLE and supports a host of amazing new features like:</p>
 					<ul>
@@ -272,16 +304,7 @@ class ns_cloner_free {
 
 					<p class="cloner-adopter">
 						<a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank"><img alt="Never Settle Cloner Pro" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/></a>
-					</p>
-					<p style="color: green; font-size: 14pt; margin-bottom: 5px; text-align: center;">
-						SPRING SALE !!!
-					</p>				
-					<p style="color: darkgreen; font-size: 14pt; margin-bottom: 5px; text-align: center;">
-						SAVE 25% UNTIL MAY 7 WITH COUPON:
-					</p>
-					<p style="font-size: 18pt; margin-bottom: 5px; text-align: center; text-decoration: none;">
-						<a style="color: darkgray;" href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank">springfling</a>
-					</p>					
+					</p>			
 					<br />
 					<div class="divide"></div>
 					<div class="social-ns-pro">
@@ -300,7 +323,7 @@ class ns_cloner_free {
 	 * Execute actions
 	 */
 	function admin_init() {
-		global $wpdb, $report, $count_tables_checked, $count_items_checked, $count_items_changed, $current_site, $is_subdomain;
+		global $wpdb, $report, $count_tables_checked, $count_items_checked, $count_items_changed, $current_site, $is_subdomain, $wp_version;
 		
 		$page = isset( $_GET[ 'page' ] ) ? $_GET[ 'page' ] : '';
 		if( 'ns-cloner' !== $page ) // stop function execution if not on plugin page
@@ -326,23 +349,23 @@ class ns_cloner_free {
 				$stimer = explode( ' ', microtime() );
 				$stimer = $stimer[1] + $stimer[0];
 				//  -----------
+
+				$source_id = $_POST['source_id'];
+				$target_site = $_POST['new_site_title'];
+				$target_site_name = sanitize_title_with_dashes($_POST['new_site_name']);
 				
 				// CREATE THE SITE
-				if ($_POST['is_create']) {
+				if ($_POST['is_create']) {	
 						// Check for blank site name
 						if ( $_POST['new_site_name'] !== '' && $_POST['new_site_title'] !== '')
 						{
 							// Create site
-							$this->create_site($_POST['new_site_name'], $_POST['new_site_title']);
-							// handle subdomain versus subdirectory modes
-							if ($is_subdomain) {
-								$this->status = $this->status . 'Created site <a href="http://' . $_POST['new_site_name'] . '.' . $current_site->domain . '" target="_blank"><b>http://'; 
-								$this->status = $this->status . $_POST['new_site_name'] . '.' . $current_site->domain . '</b></a> with ID: <b>' . $this->target_id . '</b><br />';						
-							}
-							else {
-								$this->status = $this->status . 'Created site <a href="http://' . $current_site->domain . '/' . $_POST['new_site_name'] . '" target="_blank"><b>http://'; 
-								$this->status = $this->status . $current_site->domain . '/' . $_POST['new_site_name'] . '</b></a> with ID: <b>' . $this->target_id . '</b><br />';						
-							}
+							$this->create_site($target_site_name, $target_site);
+
+							// Start compiling data for success message
+							$site_address = get_blog_details($this->target_id)->siteurl;
+							$this->status = $this->status . 'Created site <a href="'.$site_address.'" target="_blank">'; 
+							$this->status = $this->status . '<b>'.$site_address.'</b></a> with ID: <b>' . $this->target_id . '</b><br />';	
 						}
 						else
 						{
@@ -350,8 +373,7 @@ class ns_cloner_free {
 							wp_redirect( add_query_arg( 
 								array('error' => 'true', 
 									  'errormsg' => urlencode( __( 'You must specify a New Site Name and Title', 'ns_cloner' ) ), 
-									  'updated' => false, 
-									  'updatedmsg' => false), 
+									  'updated' => false), 
 								wp_get_referer() ) ); 
 							die;
 						}
@@ -361,15 +383,13 @@ class ns_cloner_free {
 				if ($_POST['is_clone']) {
 					$this->dlog( 'RUNNING NS Cloner version: ' . $this->version . ' <br /><br />' );
 					
-					$source_id = $_POST['source_id'];
 					// handle subdomain versus subdirectory modes
 					if ($is_subdomain) {
 						$source_subd = get_blog_details($source_id)->domain;
 					}
 					else {
 						// don't want the trailing slash in path just in case there are replacements that don't have it
-						$source_subd = get_blog_details($source_id)->domain . '/' . 
-										str_replace('/', '', get_blog_details($source_id)->path);
+						$source_subd = untrailingslashit( get_blog_details($source_id)->domain . get_blog_details($source_id)->path );
 					}
 					$source_site = get_blog_details($source_id)->blogname;
 					
@@ -379,28 +399,56 @@ class ns_cloner_free {
 						$target_subd = $_POST['new_site_name'] . '.' . $current_site->domain;
 					}
 					else {
-						$target_subd = $current_site->domain . '/' . $_POST['new_site_name'];
+						$target_subd = get_current_site()->domain . get_current_site()->path . $target_site_name;
 					}
-					$target_site = $_POST['new_site_title'];
 		
 					if ( $source_id == '' || $source_subd == '' || $source_site == '' || $target_id == '' || $target_subd == '' || $target_site == '') {
 						// Clear the querystring and add the results
 						wp_redirect( add_query_arg( 
 							array('error' => 'true', 
 								  'errormsg' => urlencode( __( 'You must fill out all fields in Cloning section. Otherwise unsafe operation.', 'ns_cloner' ) ), 
-								  'updated' => false, 
-								  'updatedmsg' => false), 
+								  'updated' => false), 
 							wp_get_referer() ) ); 
 						die;
 					}
-					else
-					{
+					// prevent the source site name from being contained in the target domain / directory, since the search/replaces will wreak havoc in that scenario
+					elseif( stripos($target_subd, $source_site) !== false ) {
+							wp_redirect( add_query_arg( 
+								array('error' => 'true', 
+									  'errormsg' => urlencode( __( "The Source Site Name ($source_site) may not appear in the Target Site Domain ($target_subd) or data corruption will occur. You might need to edit the Source Site's Name in Settings > General, or double-check / change your field input values.", 'ns_cloner' ) ), 
+									  'updated' => false), 
+								wp_get_referer() ) ); 
+							die;
+					}
+					else{
 						//configure all the properties
-						$source_pre = $wpdb->base_prefix . $source_id . '_';	// the wp id of the source database
+						$source_pre = $source_id==1? $wpdb->base_prefix : $wpdb->base_prefix . $source_id . '_';	// the wp id of the source database
 						$target_pre = $wpdb->base_prefix . $target_id . '_';	// the wp id of the target database
 						
 						$this->dlog ( 'Source Prefix: <b>' . $source_pre . '</b><br />' );
 						$this->dlog ( 'Target Prefix: <b>' . $target_pre . '</b><br />' );
+						
+						// Add support for ThreeWP Broadcast plugin
+						// Thank you John @ propanestudio.com and Aamir
+						// getting already added broad cast id of source id from database
+						$myrows = $wpdb->get_results( 'SELECT * FROM '.$wpdb->base_prefix.'_3wp_broadcast_broadcastdata where blog_id='.$source_id.'',ARRAY_A );
+						// loop to each data row
+						foreach($myrows as $r){
+							if($r['blog_id'] != ""){ // if blog id not empty
+								$dd=unserialize(base64_decode($r['data'])); // decode the data and unserilize this and store into varibale
+								if($dd['linked_parent']['blog_id'] != ""){ // verify this is parnet or child broad cast
+									$pushdata = $dd['linked_parent']['blog_id']	; // if its parnet then store its id and make a dataabse request and fetch data of that id
+									$myrow = $wpdb->get_results( 'SELECT * FROM '.$wpdb->base_prefix.'_3wp_broadcast_broadcastdata where blog_id='.$pushdata.'', ARRAY_A);
+									$enc=unserialize(base64_decode($myrow[0]['data'])); // unserilize and decode data
+									$this->dlog ( 'Adding ThreeWPBroadcast data: <b>' . print_r($enc,true) . '</b><br />' ); //log data
+									$enc['linked_children'][$target_id]=$r['post_id']; // merge newly added site id and post id unserlize data
+									$enc=base64_encode(serialize($enc)); // again serlize this and decode this and save into db
+									$wpdb->query('UPDATE '.$wpdb->base_prefix.'_3wp_broadcast_broadcastdata SET data="'.$enc.'" where blog_id='.$pushdata.'');							
+								}
+								// add child elemnts of broad cast for new site id
+								$wpdb->query('INSERT into '.$wpdb->base_prefix.'_3wp_broadcast_broadcastdata SET blog_id='.$target_id.',post_id='.$r['post_id'].',data="'.$r['data'].'"');
+							}
+						}
 						
 						//clone
 						$this->run_clone($source_pre, $target_pre);
@@ -420,6 +468,38 @@ class ns_cloner_free {
 				//replacement for uploads location on 3.5 and later installs
 				$replace_array['/sites/' . $source_id . '/'] = '/sites/' . $target_id . '/';
 				
+				
+				//replacement for uploads location when cloning root site
+				$main_uploads_target = '';
+				
+				if($source_id==1){
+					switch_to_blog(1);
+					$main_uploads_info = wp_upload_dir();
+					restore_current_blog();
+					$main_uploads_dir = str_replace( get_site_url('/'), '', $main_uploads_info['baseurl'] );
+					$main_uploads_replace = '';
+					// can't do it this way because the condition should NOT just be based on WP version. 
+					// it has to be checked against what the ORIGINAL version of wpmu was installed then upgraded
+					// our get_upload_folder() does this
+					//---
+					//$main_uploads_target = $wp_version < 3.5? "$main_uploads_dir/blogs.dir/$target_id" : "$main_uploads_dir/sites/$target_id";
+					//---
+					// detect if this is an older network and set the destination accordingly
+					$test_dir = WP_CONTENT_DIR . '/blogs.dir';
+					if (file_exists($test_dir)) {
+						$main_uploads_target = WP_CONTENT_DIR . '/blogs.dir/' . $target_id;
+						$main_uploads_replace = '/wp-content/blogs.dir/' . $target_id;
+					}
+					else {
+						$main_uploads_target = WP_CONTENT_DIR . '/uploads/sites/' . $target_id;
+						$main_uploads_replace = '/wp-content/uploads/sites/' . $target_id;
+					}
+					$replace_array[$main_uploads_dir] = $main_uploads_replace;
+					// debugging
+					//$report .= 'Search Source Dir: <b>' . $main_uploads_dir . '</b><br />';
+					//$report .= 'Replace Target Dir: <b>' . $main_uploads_replace . '</b><br />';
+				}				
+				
 				//this prevents issues -- maybe from previous version, try leaving out
 				//$replace_array[str_replace(' ', '%20', $source_site)] = str_replace(' ', '%20', $target_site);
 				
@@ -433,13 +513,24 @@ class ns_cloner_free {
 				}
 				$this->run_replace($target_pre, $replace_array);
 				
-				// COPY ALL MEDIA FILES 
+				// COPY ALL MEDIA FILES
+				// get the right paths to use
+				// handle for uploads location when cloning root site
 				$src_blogs_dir = $this->get_upload_folder($source_id);
+				if($source_id==1){
+					$dst_blogs_dir = $main_uploads_target;
+				}
+				else {
+					$dst_blogs_dir = $this->get_upload_folder($this->target_id);
+				}
 				
+				// Fix file dir when cloning root directory
 				// Fix some instances where physical paths have numbers in them
 				// Thank you, Christian for the catch!
 				//$dst_blogs_dir = str_replace($source_id, $target_id, $src_blogs_dir );				
-				$dst_blogs_dir = str_replace( '/' . $source_id, '/' . $target_id, $src_blogs_dir );
+				//$dst_blogs_dir = str_replace( '/' . $source_id, '/' . $target_id, $src_blogs_dir );
+				// moved up in the conditional
+				//$dst_blogs_dir = $this->get_upload_folder($this->target_id);
 				
 				//fix for paths on windows systems
 				if (strpos($src_blogs_dir,'/') !== false && strpos($src_blogs_dir,'\\') !== false ) {
@@ -447,6 +538,13 @@ class ns_cloner_free {
 					$dst_blogs_dir = str_replace('/', '\\', $dst_blogs_dir);
 				}
 				if (is_dir($src_blogs_dir)) {
+					//--------------------------------------------------------------------------
+					// dev and testing only, comment out when not in use:
+					//$num_files = 0;
+					//$report .= 'From: <b>' . $src_blogs_dir . '</b><br />';
+					//$report .= 'To: <b>' . $dst_blogs_dir . '</b><br />';
+					//--------------------------------------------------------------------------
+						
 					$num_files = recursive_file_copy($src_blogs_dir, $dst_blogs_dir, 0);
 					$report .= 'Copied: <b>' . $num_files . '</b> folders and files!<br />';
 					$this->dlog ('Copied: <b>' . $num_files . '</b> folders and files!<br />');
@@ -478,12 +576,14 @@ class ns_cloner_free {
 				$this->status = $this->status . '<a href="' . $this->log_file_url . '" target="_blank">Historical Log</a> || ';
 				$this->status = $this->status . '<a href="' . $this->detail_log_file_url . '" target="_blank">Detailed Log</a> ';
 				
+				// Save status for display on next page
+				$_SESSION['cloner_status'] = $this->status;
+				
 				// Clear the querystring and add the results
 				wp_redirect( add_query_arg( 
 					array('error' => false, 
 						  'errormsg' => false, 
-						  'updated' => 'true', 
-						  'updatedmsg' => urlencode( __( $this->status, 'ns_cloner' ) )), 
+						  'updated' => 'true'), 
 					wp_get_referer() ) ); 
 				die;
 				
@@ -502,7 +602,7 @@ class ns_cloner_free {
 
 		$blog_id = '';
 		$user_id = '';
-		$base = '/';
+		$base = PATH_CURRENT_SITE;
 
 		$tmp_domain = strtolower( esc_html( $sitename ) );
 
@@ -525,7 +625,7 @@ class ns_cloner_free {
 		$create_site_name = $sitename;
 		$create_site_title = $sitetitle;
 						
-		$user = get_user_by_email( $create_user_email );
+		$user = get_user_by('email', $create_user_email);
 
 		if( ! empty( $user ) ) { // user exists
 			$user_id = $user->ID;
@@ -551,8 +651,7 @@ class ns_cloner_free {
 			wp_redirect( add_query_arg( 
 				array('error' => 'true', 
 					  'errormsg' => urlencode( __( 'That site already exists!', 'ns_cloner' ) ), 
-					  'updated' => false, 
-					  'updatedmsg' => false), 
+					  'updated' => false), 
 				wp_get_referer() ) ); 
 			die;
 		}
@@ -585,7 +684,7 @@ class ns_cloner_free {
 		$is_new_user = 0;
 	
 		$user_id = '';
-		$user = get_user_by_email( $useremail );
+		$user = get_user_by( 'email', $useremail );
 
 		if( ! empty( $user ) ) { // user exists
 			$user_id = $user->ID;
@@ -612,24 +711,43 @@ class ns_cloner_free {
 			}
 			$this->status = $this->status . '<br />';	
 		}					
-	}
-	
+	}	
 	
 	function run_clone($source_prefix, $target_prefix)
 	{
-		global $host, $db, $usr, $pwd, $report;
+		global $host, $db, $usr, $pwd, $report, $wpdb;
 		
 		//echo $host . ' ' . $usr . ' ' . $pwd . ' <br />';
 		$cid = mysql_connect($host,$usr,$pwd); 
 		
-		// MUST ESCAPE '_' characters otherwise they will be interpreted as wildcard 
-		// single chars in LIKE statement and can really hose up the database
-		$SQL = 'SHOW TABLES LIKE \'' . str_replace('_','\_',$source_prefix) . '%\'';
+		//get list of source tables when cloning root
+		if($source_prefix==$wpdb->base_prefix){
+			$tables = $wpdb->get_results('SHOW TABLES');
+			$global_table_pattern = "/^$wpdb->base_prefix(" .implode('|',$this->global_tables). ")$/";
+			$table_names = array();
+			foreach($tables as $table){
+				$table = (array)$table;
+				$table_name = array_pop( $table );
+				$is_root_table = preg_match( "/$wpdb->prefix(?!\d+_)/", $table_name );
+				if($is_root_table && !preg_match($global_table_pattern,$table_name)){
+					array_push($table_names, $table_name);
+				}
+			}
+			$SQL = "SHOW TABLES WHERE Tables_in_$db IN('" . implode("','",$table_names). "')";
+		}
+		//get list of source tables when cloning non-root
+		else{
+			// MUST ESCAPE '_' characters otherwise they will be interpreted as wildcard 
+			// single chars in LIKE statement and can really hose up the database
+			$SQL = 'SHOW TABLES LIKE \'' . str_replace('_','\_',$source_prefix) . '%\'';
+		}
 		
 		$tables_list = mysql_db_query($db, $SQL, $cid);
 		$tables = mysql_fetch_array($tables_list);
 		
-		if ($_POST['is_debug']) { $this->dlog ( 'running sql - ' . $SQL . '<br />' ); }
+		//debugging
+		$this->dlog ( 'running sql - ' . $SQL . '<br />' );
+		if (isset($_POST['is_debug'])) { $this->dlog ( 'running sql - ' . $SQL . '<br />' ); }
 			
 		$num_tables = 0;
 		
@@ -675,7 +793,7 @@ class ns_cloner_free {
 			$this->dlog ( 'no data for sql - ' . $SQL );
 		}
 		
-		if ($_POST['is_debug']) { $this->dlog ( '-----------------------------------------------------------------------------------------------------------<br /><br />'); }
+		if (isset($_POST['is_debug'])) { $this->dlog ( '-----------------------------------------------------------------------------------------------------------<br /><br />'); }
 		$report .= 'Cloned: <b>' .$num_tables . '</b> tables!<br/ >';
 		$this->dlog('Cloned: <b>' .$num_tables . '</b> tables!<br/ >');
 		
@@ -732,7 +850,7 @@ class ns_cloner_free {
 		$clone = mysql_connect($host,$usr,$pwd); 
 		
 		$query = "DROP TABLE IF EXISTS " . $this->backquote($target_table);
-		if ($_POST['is_debug']) { $this->dlog ( $query . '<br /><br />'); }
+		if (isset($_POST['is_debug'])) { $this->dlog ( $query . '<br /><br />'); }
 		$result = mysql_db_query($db, $query, $clone);
 		if ($result == FALSE) { $this->dlog ( '<b>ERROR</b> dropping table with sql - ' . $query . '<br /><b>SQL Error</b> - ' . mysql_error($clone) . '<br />'); }
 		
@@ -750,7 +868,7 @@ class ns_cloner_free {
 		
 		// Create cloned table structure
 		$query = str_replace($source_table, $target_table, $sql_statements);
-		if ($_POST['is_debug']) { $this->dlog ( $query . '<br /><br />'); }
+		if (isset($_POST['is_debug'])) { $this->dlog ( $query . '<br /><br />'); }
 		$result = mysql_db_query($db, $query, $clone);
 		if ($result == FALSE) { $this->dlog ( '<b>ERROR</b> creating table structure with sql - ' . $query . '<br /><b>SQL Error</b> - ' . mysql_error($clone) . '<br />'); }
 
@@ -814,7 +932,7 @@ class ns_cloner_free {
 				
 				// Execute current insert row statement						
 				$query = $entries . implode(', ', $values) . ')';
-				if ($_POST['is_debug']) { $this->dlog ( $query . '<br />'); }
+				if (isset($_POST['is_debug'])) { $this->dlog ( $query . '<br />'); }
 				// Have to separate this into its own function otherwise it interfers with current mysql connection / results
 				$this->insert_query($query);			
 				
@@ -961,7 +1079,7 @@ class ns_cloner_free {
 					$count_updates_run;
 					$WHERE_SQL = substr($WHERE_SQL,0,-4); // strip off the excess AND - the easiest way to code this without extra flags, etc.
 					$UPDATE_SQL = $UPDATE_SQL.$WHERE_SQL;
-					if ($_POST['is_debug']) { $this->dlog ( $UPDATE_SQL.'<br/><br/>'); }
+					if (isset($_POST['is_debug'])) { $this->dlog ( $UPDATE_SQL.'<br/><br/>'); }
 					$result = mysql_db_query($db,$UPDATE_SQL,$cid);
 					if (!$result) {
 					$this->dlog (("<br /><b>ERROR: </b>" . mysql_error() . "<br/>$UPDATE_SQL<br/>")); } 
@@ -1012,6 +1130,7 @@ class ns_cloner_free {
 		$this->dlog('Original basedir returned by wp_upload_dir() = <strong>'.$src_upload_dir['basedir'].'</strong><br />');
 		// trim '/files' off the end of loction for sites < 3.5 with old blogs.dir format
 		$folder = str_replace('/files', '', $src_upload_dir['basedir']); 
+		$content_dir = '';
 		// validate the folder itself to handle cases where htaccess or themes alter wp_upload_dir() output
 		if (strpos($folder, '/'.$id) === false || !file_exists($folder) ) {
 			// we have a non-standard folder and the copy will probably not work unless we correct it	
@@ -1033,6 +1152,9 @@ class ns_cloner_free {
 				return $test_dir;
 			}
 		}
+		elseif ( $id == 1 ) {
+			return	$content_dir . '/uploads/';
+		}
 		// otherwise we have a standard folder OR could not find a normal folder and are stuck with 
 		// sending the original wp_upload_dir() back knowing the replace and copy should work
 		return $folder;
@@ -1050,7 +1172,7 @@ class ns_cloner_free {
 			}
 			$files = scandir($src);
 			foreach ($files as $file)
-				if ($file != "." && $file != "..") $num = recursive_file_copy("$src/$file", "$dst/$file", $num); 
+				if ($file != "." && $file != ".." && $file != 'sites') $num = recursive_file_copy("$src/$file", "$dst/$file", $num); 
 		}
 		else if (file_exists($src)) copy($src, $dst);
 		return $num;
@@ -1075,4 +1197,3 @@ class ns_cloner_free {
 	}
 
 $ns_cloner_free = new ns_cloner_free();
-

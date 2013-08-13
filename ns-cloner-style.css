@@ -58,6 +58,14 @@
 	-khtml-border-radius: 10px; /* for old Konqueror browsers */
 }
 
+.before-clone > div { 
+	display: none;
+}
+
+.before-clone > div.ns-message {
+	display: block;
+}
+
 .before-clone p {
 	padding: 0 !important;
 	margin: 5px 0 0 0 !important;
@@ -219,4 +227,15 @@ h2.no-pad {
 
 .social-ns-pro img {
 	max-width: 100%;
+}
+
+#tables-to-clone {
+	height: 120px;
+	overflow: auto;
+	background: white;
+	border: solid 1px #ddd;
+	border-radius: 8px;
+}
+#tables-to-clone input {
+	margin: .5em .5em 0;
 }
