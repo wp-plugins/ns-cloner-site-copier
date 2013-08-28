@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4.6
+Version: 2.1.4.7
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -81,7 +81,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.4.6';
+	var $version = '2.1.4.7';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -463,15 +463,9 @@ class ns_cloner_free {
 				$replace_array[$source_subd] = $target_subd;
 				$replace_array[$source_site] = $target_site;
 				
-				//replacement for uploads location on pre 3.5 installs
-				$replace_array['blogs.dir/' . $source_id . '/'] = 'blogs.dir/' . $target_id . '/';
-				//replacement for uploads location on 3.5 and later installs
-				$replace_array['/sites/' . $source_id . '/'] = '/sites/' . $target_id . '/';
-				
-				
-				//replacement for uploads location when cloning root site
+				// REPLACEMENTS FOR ROOT SITE CLONING
+				// uploads location
 				$main_uploads_target = '';
-				
 				if($source_id==1){
 					switch_to_blog(1);
 					$main_uploads_info = wp_upload_dir();
@@ -495,16 +489,22 @@ class ns_cloner_free {
 						$main_uploads_replace = '/wp-content/uploads/sites/' . $target_id;
 					}
 					$replace_array[$main_uploads_dir] = $main_uploads_replace;
-					// debugging
+					// debugging ----------------------------
 					//$report .= 'Search Source Dir: <b>' . $main_uploads_dir . '</b><br />';
 					//$report .= 'Replace Target Dir: <b>' . $main_uploads_replace . '</b><br />';
+					// --------------------------------------
+					//reset the option_name = wp_#_user_roles row in the wp_#_options table back to the id of the target site
+					$replace_array[$wpdb->base_prefix . 'user_roles'] = $wpdb->base_prefix . $target_id . '_user_roles';
+				} else {
+				// REPLACEMENTS FOR NON-ROOT SITE CLONING
+					// uploads location
+					// replacement for uploads location on pre 3.5 installs
+					$replace_array['blogs.dir/' . $source_id . '/'] = 'blogs.dir/' . $target_id . '/';
+					// replacement for uploads location on 3.5 and later installs
+					$replace_array['/sites/' . $source_id . '/'] = '/sites/' . $target_id . '/';
+					//reset the option_name = wp_#_user_roles row in the wp_#_options table back to the id of the target site
+					$replace_array[$wpdb->base_prefix . $source_id . '_user_roles'] = $wpdb->base_prefix . $target_id . '_user_roles';
 				}				
-				
-				//this prevents issues -- maybe from previous version, try leaving out
-				//$replace_array[str_replace(' ', '%20', $source_site)] = str_replace(' ', '%20', $target_site);
-				
-				//reset the option_name = wp_#_user_roles row in the wp_#_options table back to the id of the target site
-				$replace_array[$wpdb->base_prefix . $source_id . '_user_roles'] = $wpdb->base_prefix . $target_id . '_user_roles';
 				
 				//replace
 				$this->dlog ( 'running replace on Target table prefix: ' . $target_pre . '<br />' );

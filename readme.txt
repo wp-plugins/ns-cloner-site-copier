@@ -90,6 +90,9 @@ Usually this means that the clone operation did not complete successfully. The m
 3. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.7 =
+* Fixed critical bug that prevented user roles from getting cloned when cloning the ROOT site only
+
 = 2.1.4.6 =
 * Fixed critical bug that was causing incompatibilities with some plugins that install their own tables to the database and in some cases the cloning operation was leaving a single custom table behind in the clone. This primarily affected Calendar plugins or other plugins where the table name began with higher letters (a, b, c) after the prefix like wp_a*, wp_b*, wp_c*
 
@@ -150,3 +153,6 @@ First public release
 
 = 2.1.4.6 =
 * Fixed critical bug that was causing incompatibilities with some plugins that install their own tables to the database and in some cases the cloning operation was leaving a single custom table behind in the clone. This primarily affected Calendar plugins or other plugins where the table name began with higher letters (a, b, c) after the prefix like wp_a*, wp_b*, wp_c*
+
+= 2.1.4.7 =
+* Fixed critical bug that prevented user roles from getting cloned when cloning the ROOT site only
