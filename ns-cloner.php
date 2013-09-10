@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4.7
+Version: 2.1.4.8
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -81,7 +81,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.4.7';
+	var $version = '2.1.4.8';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -718,7 +718,8 @@ class ns_cloner_free {
 		global $host, $db, $usr, $pwd, $report, $wpdb;
 		
 		//echo $host . ' ' . $usr . ' ' . $pwd . ' <br />';
-		$cid = mysql_connect($host,$usr,$pwd); 
+		$cid = mysql_connect($host,$usr,$pwd);
+		mysql_set_charset( DB_CHARSET, $cid );
 		
 		//get list of source tables when cloning root
 		if($source_prefix==$wpdb->base_prefix){
@@ -849,7 +850,8 @@ class ns_cloner_free {
 
 		global $host, $db, $usr, $pwd;
 		$sql_statements = '';
-		$clone = mysql_connect($host,$usr,$pwd); 
+		$clone = mysql_connect($host,$usr,$pwd);
+		mysql_set_charset( DB_CHARSET, $clone );
 		
 		$query = "DROP TABLE IF EXISTS " . $this->backquote($target_table);
 		if (isset($_POST['is_debug'])) { $this->dlog ( $query . '<br /><br />'); }
@@ -948,6 +950,7 @@ class ns_cloner_free {
 	function insert_query($query) {
 		global $host, $db, $usr, $pwd;
 		$insert = mysql_connect($host,$usr,$pwd); 
+		mysql_set_charset( DB_CHARSET, $insert );
 		$results = mysql_db_query($db, $query, $insert);
 		if ($results == FALSE) { $this->dlog ( '<b>ERROR</b> inserting into table with sql - ' . $query . '<br /><b>SQL Error</b> - ' . mysql_error($clone) . '<br />'); }
 	}
@@ -957,7 +960,8 @@ class ns_cloner_free {
 		global $host, $db, $usr, $pwd, $report, $count_tables_checked, $count_items_checked, $count_items_changed;
 		// Connect to DB
 		// Set new_link param to true to avoid issues with WP
-		$cid = mysql_connect($host,$usr,$pwd,true); 
+		$cid = mysql_connect($host,$usr,$pwd,true);
+		mysql_set_charset( DB_CHARSET, $cid );
 
 		if (!$cid) { $this->dlog ("Connecting to DB Error: " . mysql_error() . "<br/>"); }
 
