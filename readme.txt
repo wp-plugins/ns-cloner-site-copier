@@ -12,9 +12,7 @@ The NS Cloner saves multisite admins LOTS of time by enabling them to clone exis
 
 == Description ==
 
-This is by far the easiest, fastest, and most user-friendly way you will ever create fully configured sites on your multisite networks. As with everything we do, Never Settle is fanatical about simplifying user tasks to an absolute bare and joyful minimum without sacrificing the complex functionality going on behind the scenes. You will not find another site cloner that comes anywhere close to how easy this is to use. Here is exactly how easy it is:
-
-http://www.youtube.com/watch?v=h9BRrOS6bLM
+This is by far the easiest, fastest, and most user-friendly way you will ever create fully configured sites on your multisite networks. As with everything we do, Never Settle is fanatical about simplifying user tasks to an absolute bare and joyful minimum without sacrificing the complex functionality going on behind the scenes. You will not find another site cloner that comes anywhere close to how easy this is to use.
 
 The NS Cloner will take any existing site on your WordPress multisite network and clone it into a new site that is completely identical in theme & theme settings, plugins & plugin configurations, content, pictures, videos, and site settings. **Everything** is preserved and intelligent replacements are made so that the new site settings reflect your choices for the name and title of the new site as well as other automated background housekeeping to make sure the new site works exactly the same way as if you had taken the time to set it all up manually.
 
@@ -94,6 +92,7 @@ Usually this means that the clone operation did not complete successfully. The m
 == Changelog ==
 = 2.1.4.8 =
 * Fixed bug that was causing UTF-8 and DB character encoding issues in some environments. Primarily affected non-English sites.
+* Improved search and replace to handle rare situations where more than one replace is necessary in a single column.
 
 = 2.1.4.7 =
 * Fixed critical bug that prevented user roles from getting cloned when cloning the ROOT site only

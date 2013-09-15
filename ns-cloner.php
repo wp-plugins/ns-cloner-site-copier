@@ -1018,7 +1018,7 @@ class ns_cloner_free {
 
 			while ($row = mysql_fetch_array($data)) {
 
-				// Initialize the UPDATE string we're going to build, and we don't do an update for each damn column...
+				// Initialize the UPDATE string we're going to build, and we don't do an update for each column...
 				
 				$need_to_update = false;
 				$UPDATE_SQL = 'UPDATE '.$table. ' SET ';
@@ -1028,50 +1028,31 @@ class ns_cloner_free {
 
 				foreach ($column_name as $current_column) {
 					
+					// Thank you to hansbr for improved replacement logic
+					$data_to_fix = $edited_data = $row[$current_column]; // set the same now - if they're different later we know we need to updated
+					
 					// -- PROCESS THE SEARCH ARRAY --
 					foreach( $replace_array as $search_for => $replace_with) {
+						
 						$j++;
 						$count_items_checked++;
-
 						//            echo "<br/>Current Column = $current_column";
-
-						$data_to_fix = $row[$current_column];
-						$edited_data = $data_to_fix;            // set the same now - if they're different later we know we need to update
-						
 						//            if ($current_column == $index_field) $index_value = $row[$current_column];    // if it's the index column, store it for use in the update
 						
-						$unserialized = unserialize($data_to_fix);  // unserialise - if false returned we don't try to process it as serialised
-						
-						if ($unserialized) {
-							
+						if (is_serialized($data_to_fix)) {
 							//                echo "<br/>unserialize OK - now searching and replacing the following array:<br/>";
 							//                echo "<br/>$data_to_fix";
-							//                
+							$unserialized = unserialize($edited_data);
 							//                print_r($unserialized);
-							
 							$this->recursive_array_replace($search_for, $replace_with, $unserialized);
-							
 							$edited_data = serialize($unserialized);
-							
 							//                echo "**Output of search and replace: <br/>";
 							//                echo "$edited_data <br/>";
 							//                print_r($unserialized);        
 							//                echo "---------------------------------<br/>";
-							
 						}
-						
-						else {					
-							if (is_string($data_to_fix)) $edited_data = str_replace($search_for,$replace_with,$data_to_fix) ;
-						}
-						
-						if ($data_to_fix != $edited_data) {   // If they're not the same, we need to add them to the update string
-							
-							$count_items_changed++;
-							
-							if ($need_to_update != false) $UPDATE_SQL = $UPDATE_SQL.',';  // if this isn't our first time here, add a comma
-							$UPDATE_SQL = $UPDATE_SQL.' '.$current_column.' = "'.mysql_real_escape_string($edited_data).'"' ;
-							$need_to_update = true; // only set if we need to update - avoids wasted UPDATE statements
-							
+						elseif (is_string($data_to_fix)){
+							$edited_data = str_replace($search_for,$replace_with,$edited_data) ;
 						}
 						
 						if ($table_index[$j]){
@@ -1080,15 +1061,23 @@ class ns_cloner_free {
 						
 					}
 					//-- SEARCH ARRAY COMPLETE ----------------------------------------------------------------------
+					
+					if ($data_to_fix != $edited_data) {   // If they're not the same, we need to add them to the update string
+						$count_items_changed++;
+						if ($need_to_update != false) $UPDATE_SQL = $UPDATE_SQL.',';  // if this isn't our first time here, add a comma
+						$UPDATE_SQL = $UPDATE_SQL.' '.$current_column.' = "'.mysql_real_escape_string($edited_data).'"' ;
+						$need_to_update = true; // only set if we need to update - avoids wasted UPDATE statements
+					}
+					
 				}
+
 				if ($need_to_update) {
 					$count_updates_run;
 					$WHERE_SQL = substr($WHERE_SQL,0,-4); // strip off the excess AND - the easiest way to code this without extra flags, etc.
 					$UPDATE_SQL = $UPDATE_SQL.$WHERE_SQL;
 					if (isset($_POST['is_debug'])) { $this->dlog ( $UPDATE_SQL.'<br/><br/>'); }
 					$result = mysql_db_query($db,$UPDATE_SQL,$cid);
-					if (!$result) {
-					$this->dlog (("<br /><b>ERROR: </b>" . mysql_error() . "<br/>$UPDATE_SQL<br/>")); } 
+					if (!$result) $this->dlog (("<br /><b>ERROR: </b>" . mysql_error() . "<br/>$UPDATE_SQL<br/>")); 
 				}
 			}
 			/*---------------------------------------------------------------------------------------------------------*/
