@@ -73,7 +73,7 @@ $count_items_checked;
 $count_items_changed;	
 
 // Start session
-if ( !session_id() )
+if ( is_admin() && !session_id() )
 	session_start();
 
 class ns_cloner_free {
