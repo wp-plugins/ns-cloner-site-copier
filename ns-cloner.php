@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4.8
+Version: 2.1.4.9
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -81,7 +81,7 @@ class ns_cloner_free {
 	/**
 	 * Class Globals
 	 */
-	var $version = '2.1.4.8';
+	var $version = '2.1.4.9';
 	var $log_file = '';
 	var $log_file_url = '';
 	var $detail_log_file = '';
@@ -734,7 +734,7 @@ class ns_cloner_free {
 					array_push($table_names, $table_name);
 				}
 			}
-			$SQL = "SHOW TABLES WHERE Tables_in_$db IN('" . implode("','",$table_names). "')";
+			$SQL = "SHOW TABLES WHERE `Tables_in_$db` IN('" . implode("','",$table_names). "')";
 		}
 		//get list of source tables when cloning non-root
 		else{

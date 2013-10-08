@@ -90,9 +90,11 @@ Usually this means that the clone operation did not complete successfully. The m
 3. The NS Cloner in all its simple, user-friendly glory
 
 == Changelog ==
+= 2.1.4.9 =
+* Fixed several small bugs reported to support that impacted specific scenarios, configurations, and plugin combinations.
+
 = 2.1.4.8 =
 * Fixed bug that was causing UTF-8 and DB character encoding issues in some environments. Primarily affected non-English sites.
-* Improved search and replace to handle rare situations where more than one replace is necessary in a single column.
 
 = 2.1.4.7 =
 * Fixed critical bug that prevented user roles from getting cloned when cloning the ROOT site only
