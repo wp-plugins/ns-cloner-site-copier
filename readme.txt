@@ -16,8 +16,7 @@ This is by far the easiest, fastest, and most user-friendly way you will ever cr
 
 The NS Cloner will take any existing site on your WordPress multisite network and clone it into a new site that is completely identical in theme & theme settings, plugins & plugin configurations, content, pictures, videos, and site settings. **Everything** is preserved and intelligent replacements are made so that the new site settings reflect your choices for the name and title of the new site as well as other automated background housekeeping to make sure the new site works exactly the same way as if you had taken the time to set it all up manually.
 
-If you want even more functionality, check out our Pro version!
-http://neversettle.it/ns-cloner-pro/
+If you want even more functionality, [check out our Pro version](https://neversettle.iljmp.com/1/ns-cloner-pro)!
 
 = Standard Precautions and Notes =
 * This plugin ONLY works on WordPress Multisite and is not for use on single site installations. 
@@ -71,7 +70,7 @@ Check with your host. They probably have an agreesive mod_security configuration
 
 = When will the Pro version be available? =
 
-Wait no longer! It's here: http://neversettle.it/ns-cloner-pro/
+Wait no longer! [It's here!](https://neversettle.iljmp.com/1/ns-cloner-pro)
 
 = Can I clone the root site (ID=1)? =
 
@@ -123,7 +122,7 @@ Usually this means that the clone operation did not complete successfully. The m
 
 = 2.1.4.1 =
 * Fixed 2.1.4 to make file copies compatible with the new uploads structure in native WP 3.5 installs
-* ANNOUNCING NS Cloner Pro is now Available at http://neversettle.it/ns-cloner-pro/
+* ANNOUNCING NS Cloner Pro is now Available [HERE](https://neversettle.iljmp.com/1/ns-cloner-pro)
 
 = 2.1.4 =
 * Fixed bug in 2.1.3 that caused file copies to fail in some cases where the target folders already existed

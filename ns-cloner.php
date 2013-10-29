@@ -291,7 +291,7 @@ class ns_cloner_free {
 					</table>
 					<div class="divide"></div>
 					<h3>Pro Features</h3>
-					<p>Our <a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank">Pro version</a> is NOW AVAILABLE and supports a host of amazing new features like:</p>
+					<p>Our <a href="https://neversettle.iljmp.com/1/cloner-installed" target="_blank">Pro version</a> is NOW AVAILABLE and supports a host of amazing new features like:</p>
 					<ul>
 					<li>Cloning Modes (clone over existing &amp; search/replace only)</li>
 					<li>Global serialized-safe search and replace in ALL tables</li>
@@ -303,7 +303,7 @@ class ns_cloner_free {
 					</ul> 
 
 					<p class="cloner-adopter">
-						<a href="http://neversettle.it/shop/ns-cloner-pro/" target="_blank"><img alt="Never Settle Cloner Pro" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/></a>
+						<a href="https://neversettle.iljmp.com/1/cloner-installed" target="_blank"><img alt="Never Settle Cloner Pro" src="<?php echo $this->adopter_img ?>" style="margin-right: 7px"/></a>
 					</p>			
 					<br />
 					<div class="divide"></div>
