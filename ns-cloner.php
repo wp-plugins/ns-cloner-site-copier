@@ -1002,8 +1002,11 @@ class ns_cloner_free {
 			
 			while ($field_rows = mysql_fetch_array($fields_list)) {
 				$column_name[$i++] = $field_rows['Field'];
-				if ($field_rows['Key'] == 'PRI') $table_index[$i] = true ;
+				if ($field_rows['Key'] == 'PRI') $table_index[] = $field_rows['Field'] ;
 			}
+
+			// skip if no primary key
+			if( empty($table_index) ) continue;
 
 			//    print_r ($column_name);
 			//    print_r ($table_index);
@@ -1012,7 +1015,7 @@ class ns_cloner_free {
 			
 			$SQL = "SELECT * FROM ".$table;     // fetch the table contents
 			$data = mysql_db_query($db, $SQL, $cid);
-			
+
 			if (!$data) {
 			$this->dlog ("<br /><b>ERROR:</b> " . mysql_error() . "<br/>$SQL<br/>"); } 
 
@@ -1023,6 +1026,9 @@ class ns_cloner_free {
 				$need_to_update = false;
 				$UPDATE_SQL = 'UPDATE '.$table. ' SET ';
 				$WHERE_SQL = ' WHERE ';
+				foreach($table_index as $index){
+					$WHERE_SQL .= "$index = '$row[$index]' AND ";
+				}
 				
 				$j = 0;
 
@@ -1030,15 +1036,13 @@ class ns_cloner_free {
 					
 					// Thank you to hansbr for improved replacement logic
 					$data_to_fix = $edited_data = $row[$current_column]; // set the same now - if they're different later we know we need to updated
+					$j++; // keep track of index of current column
 					
 					// -- PROCESS THE SEARCH ARRAY --
-					foreach( $replace_array as $search_for => $replace_with) {
-						
-						$j++;
+					foreach( $replace_array as $search_for => $replace_with) {						
 						$count_items_checked++;
 						//            echo "<br/>Current Column = $current_column";
 						//            if ($current_column == $index_field) $index_value = $row[$current_column];    // if it's the index column, store it for use in the update
-						
 						if (is_serialized($data_to_fix)) {
 							//                echo "<br/>unserialize OK - now searching and replacing the following array:<br/>";
 							//                echo "<br/>$data_to_fix";
@@ -1053,12 +1057,7 @@ class ns_cloner_free {
 						}
 						elseif (is_string($data_to_fix)){
 							$edited_data = str_replace($search_for,$replace_with,$edited_data) ;
-						}
-						
-						if ($table_index[$j]){
-							$WHERE_SQL = $WHERE_SQL.$current_column.' = "'.$row[$current_column].'" AND ';
-						}
-						
+						}						
 					}
 					//-- SEARCH ARRAY COMPLETE ----------------------------------------------------------------------
 					
