@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: Save loads of time with the Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out NS Cloner Pro for additional features like cloning onto existing sites and advanced Search and Replace functionality.
 Author: Never Settle
-Version: 2.1.4.9
+Version: 2.1.4.9.1
 Network: true
 Author URI: http://neversettle.it
 License: GPLv2 or later
@@ -1126,7 +1126,7 @@ class ns_cloner_free {
 		$folder = str_replace('/files', '', $src_upload_dir['basedir']); 
 		$content_dir = '';
 		// validate the folder itself to handle cases where htaccess or themes alter wp_upload_dir() output
-		if (strpos($folder, '/'.$id) === false || !file_exists($folder) ) {
+		if ( $id!=1 && (strpos($folder, '/'.$id) === false || !file_exists($folder)) ) {
 			// we have a non-standard folder and the copy will probably not work unless we correct it	
 			// get the installation dir - we're using the internal WP constant which the codex says not to do
 			// but at this point the wp_upload_dir() has failed and this is a last resort
@@ -1145,9 +1145,6 @@ class ns_cloner_free {
 				$this->dlog('Found actual uploads folder at '.$test_dir.'<br />');
 				return $test_dir;
 			}
-		}
-		elseif ( $id == 1 ) {
-			return	$content_dir . '/uploads/';
 		}
 		// otherwise we have a standard folder OR could not find a normal folder and are stuck with 
 		// sending the original wp_upload_dir() back knowing the replace and copy should work
