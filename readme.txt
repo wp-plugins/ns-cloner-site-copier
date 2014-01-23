@@ -14,6 +14,8 @@ The NS Cloner saves multisite admins LOTS of time by enabling them to clone exis
 
 This is by far the easiest, fastest, and most user-friendly way you will ever create fully configured sites on your multisite networks. As with everything we do, Never Settle is fanatical about simplifying user tasks to an absolute bare and joyful minimum without sacrificing the complex functionality going on behind the scenes. You will not find another site cloner that comes anywhere close to how easy this is to use.
 
+http://www.youtube.com/watch?v=h9BRrOS6bLM
+
 The NS Cloner will take any existing site on your WordPress multisite network and clone it into a new site that is completely identical in theme & theme settings, plugins & plugin configurations, content, pictures, videos, and site settings. **Everything** is preserved and intelligent replacements are made so that the new site settings reflect your choices for the name and title of the new site as well as other automated background housekeeping to make sure the new site works exactly the same way as if you had taken the time to set it all up manually.
 
 If you want even more functionality, [check out our Pro version](https://neversettle.iljmp.com/1/ns-cloner-pro)!
