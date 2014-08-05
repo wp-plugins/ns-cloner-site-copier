@@ -10,7 +10,7 @@ class ns_cloner_section_select_source extends ns_cloner_section {
 		$this->open_section_box( $this->id, __("Select Source","ns-cloner") );
 		?>
 		<select name="source_id">
-		  <?php foreach( wp_get_sites() as $site ): ?>
+		  <?php foreach( wp_get_sites(apply_filters('ns_cloner_wp_get_sites_args',array('limit'=>1000))) as $site ): ?>
 			<option value="<?php echo $site['blog_id']; ?>">
 				<?php $title = get_blog_details($site['blog_id'])->blogname; ?>
 				<?php $url = is_subdomain_install()? "$site[domain]" : "$site[domain]$site[path]"; ?>

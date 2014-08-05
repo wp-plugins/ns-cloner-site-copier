@@ -35,4 +35,14 @@
 		}		
 	}
 
+	// warn if other plugin installed that adds additional wpmu_validate_blog_signup requirements (like Site Templates)
+	$test_blog_validation = wpmu_validate_blog_signup( 'nsclonervalidationtest', 'NS Cloner Test' );
+	$errors = $test_blog_validation['errors']->get_error_messages();
+	if( !empty($errors) ){
+		$errors_string = '"' . join( '","', $errors ) . '"';
+		echo "<span class='ns-cloner-warning-message'>";
+		_e( 'It looks like you have another plugin installed which is applying its own additional site-meta creation requirements. The Cloner will still work, but you should be aware that sites created with the Cloner might not appear normally in the other plugin.', 'ns-cloner' );
+		echo "</span>";
+	}
+
 ?>

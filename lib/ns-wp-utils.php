@@ -8,9 +8,12 @@ require_once (dirname(__FILE__).'/ns-log-utils.php');
 function ns_wp_create_site( $site_name, $site_title, $logfile ) {
 	$user = apply_filters( 'ns_wp_create_site_admin', wp_get_current_user() );
 	$site_meta = apply_filters( 'ns_wp_create_site_meta', array("public"=>1) );
+	// use wp's built in wpmu_validate_blog_signup validation for all new site vars
+	// also, use a test on  a known valid name/title to filter out any validation errors added by other plugins via the wpmu_validate_blog_signup filter
+	$baseline_validation = wpmu_validate_blog_signup( 'nsclonervalidationtest', 'NS Cloner Validation Test' );
 	$site_data = wpmu_validate_blog_signup( $site_name, $site_title, $user );
-	$site_errors = $site_data['errors']->get_error_messages();
-	if( !empty( $site_errors ) ){
+	$site_errors = array_diff( $baseline_validation['errors']->get_error_messages(), $site_data['errors']->get_error_messages() );
+	if( !empty( $site_errors ) && false ){
 		ns_log_write( "Error creating site with name '$site_name' and title '$site_title'. One or more problems errors detected by WP: ".print_r($site_errors,true), $logfile );
 		return false;
 	}

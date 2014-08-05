@@ -88,6 +88,10 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+= 3.0.2 =
+* Fixed conflicts with some other multisite plugins that were triggering validation errors when attempting a clone
+* Raised number of sites shown by default in "Select Source" dropdown from 100 to 1000 and made parameters for that query filterable 
+
 = 3.0.1 =
 * Fixed www vs. non-www issue on subdomain installs that were using www and generating sites like site.www.domain.com
 * Added robust new detection system for identifying WP version and uploads location even under abnormal edge cases
