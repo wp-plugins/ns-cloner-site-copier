@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.2
+Version: 3.0.2.1
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -35,10 +35,6 @@ script generation and automate the cloning process from scripts into queries
 Original db_backup website: http://restkultur.ch/personal/wolf/scripts/db_backup/
 */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit; // Exit if accessed directly
-} 
-
 // load constants and libraries
 define( 'NS_CLONER_V3_ADDON_FEED', 'http://neversettle.it/feed/?post_type=product&product_cat=ns-cloner-add-ons&cachebust=6');
 define( 'NS_CLONER_V3_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
@@ -66,7 +62,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.2';
+	var $version = '3.0.2.1';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -592,7 +588,7 @@ class ns_cloner {
 
 	// Define all operation specific variables we'll need for core clone operation 
 	function set_up_vars( $source_id, $target_id, $vars=array('id','prefix','subd','title','upload_dir','upload_url','url') ){		
-		$this->set_up_source_vars( $source_id,$vars );
+		$this->set_up_source_vars( $source_id, $vars );
 		$this->set_up_target_vars( $target_id, $vars );
 	}
 
@@ -724,8 +720,9 @@ class ns_cloner {
 		else{
 			// escape '_' characters otherwise they will be interpreted as wildcard single chars in LIKE statement
 			$escaped_prefix = esc_sql(str_replace('_','\_',$prefix));
-			$tables = $db->get_col("SHOW TABLES LIKE '{$escaped_prefix}%'");
+			$tables = (array) $db->get_col("SHOW TABLES LIKE '{$escaped_prefix}%'");
 		}
+		$this->dlog( 'Doing get_site_tables for prefix '.$prefix.' returned tables: '.join(',',$tables) );
 		//apply filter and return
 		return $filter!=true? $tables : apply_filters( "ns_cloner_site_tables", $tables, $db, $prefix, $this );
 	}
@@ -752,7 +749,7 @@ class ns_cloner {
 				// check if it's in the requested time period
 				$seconds_since_this_log = strtotime('now') - strtotime("$date_matches[1] $date_matches[2]");
 				if( $seconds_since_this_log <= $days*24*60*60 ){
-					$recent_logs[] = NS_CLONER_V3_PLUGIN_URL.$log;
+					$recent_logs[] = NS_CLONER_V3_PLUGIN_URL.'logs/'.$log;
 				}
 			}
 		}

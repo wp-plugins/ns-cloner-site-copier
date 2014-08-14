@@ -23,7 +23,12 @@
 				<select class="ns-cloner-select-mode" name="clone_mode">
 					<?php foreach( $ns_cloner->clone_modes as $mode=>$details ): ?>
 						<option value="<?php echo $mode; ?>" data-description="<?php echo apply_filters("ns_cloner_mode_description",$details["description"]); ?>" data-button-text="<?php echo apply_filters("ns_cloner_mode_button_text",$details["button_text"]); ?>">
-							<?php echo $details["title"]; ?>
+							<?php
+								// TODO: this is crude and we probably need a better way to do this, but we need to be able
+								// 		 to have cloning modes that do not show up in the drop-down. currently, just exclude
+								//		 any modes that have NONE for a title. 
+								if ( 'NONE' !== $details["title"] ) echo $details["title"]; 
+							?>
 						</option>
 					<?php endforeach; ?>
 				</select>

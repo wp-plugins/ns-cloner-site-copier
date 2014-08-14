@@ -125,7 +125,7 @@
   					$.each( response.messages, function(index,item){
   						$section = $('#ns-cloner-section-'+item.section);
   						$error_display_location = ($section.length > 0) ? $section.find('.ns-cloner-section-content') : $form;
-  						$('<span class="ns-cloner-error-message"></span>').text( item.message ).prependTo( $error_display_location );
+  						$('<span class="ns-cloner-error-message"></span>').html( item.message ).prependTo( $error_display_location );
   					});
   					// scroll up to the first error message on the page, minus 40px (higher on page) for the admin bar plus a little extra padding
   					var first_error_message_scroll_location = $('.ns-cloner-error-message:first').offset().top - 40;

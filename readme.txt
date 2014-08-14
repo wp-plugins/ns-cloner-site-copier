@@ -88,6 +88,9 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+= 3.0.2.1 =
+* Added important search/replace logic patch
+
 = 3.0.2 =
 * Fixed conflicts with some other multisite plugins that were triggering validation errors when attempting a clone
 * Raised number of sites shown by default in "Select Source" dropdown from 100 to 1000 and made parameters for that query filterable 
