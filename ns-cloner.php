@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.2.1
+Version: 3.0.3
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -35,8 +35,12 @@ script generation and automate the cloning process from scripts into queries
 Original db_backup website: http://restkultur.ch/personal/wolf/scripts/db_backup/
 */
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit; // Exit if accessed directly
+} 
+
 // load constants and libraries
-define( 'NS_CLONER_V3_ADDON_FEED', 'http://neversettle.it/feed/?post_type=product&product_cat=ns-cloner-add-ons&cachebust=6');
+define( 'NS_CLONER_V3_ADDON_FEED', 'http://neversettle.it/feed/?post_type=product&product_cat=ns-cloner-add-ons');
 define( 'NS_CLONER_V3_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'NS_CLONER_V3_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'NS_CLONER_LOG_FILE', NS_CLONER_V3_PLUGIN_DIR . 'logs/ns-cloner-summary.log' );
@@ -62,7 +66,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.2.1';
+	var $version = '3.0.3';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -125,23 +129,11 @@ class ns_cloner {
 				'title' => __( 'Normal Clone', 'ns-cloner' ),
 				'button_text' => __( 'Clone', 'ns-cloner' ),
 				'description' => __( 'Take an existing site and create a brand new copy of it at another url.', 'ns-cloner' ),
-				'report_message' => __(	'Clone complete!' )
+				'report_message' => __(	'Clone complete!' )
 			)
 		));
-		// allow filtering of $_REQUEST vars + set up class vars from request
-		$this->request = apply_filters( 'ns_cloner_request_vars', $_REQUEST );
-		// set action - for all cloning operations will be "process"
-		// this is for flexibility if we eventually want to run admin actions 
-		// further outside of the normal pipeline than can be controlled by modes
-		if( isset($this->request['action']) && !empty($this->request['action']) ){
-			$this->current_action = $this->request['action'];
-		}
-		// set clone mode - default is "core" and can be extended by addons
-		// used for smaller adjustments that stick to general cloning pipeline
-		// but just add/remove/reorder steps
-		if( isset($this->request['clone_mode']) ){
-			$this->current_clone_mode = $this->request['clone_mode'];
-		}		
+		// set up request vars
+		$this->set_up_request();
 		// load core sections
 		$this->load_section( 'select-source' );
 		$this->load_section( 'create-target' );
@@ -158,7 +150,8 @@ class ns_cloner {
 		}
 		// add main hook for addon registration
 		do_action( 'ns_cloner_construct', $this );
-		
+		// set up ajax for searching sites
+		add_action( 'wp_ajax_ns_cloner_search_sites', array($this,'ajax_search_sites') );		
 	}
 
 	function activate( $network_wide ){
@@ -181,8 +174,9 @@ class ns_cloner {
 			// (ns_cloner_before_everything below will only trigger if an action is being run)
 			do_action( 'ns_cloner_admin_init' );
 		}
-		// run cloner if on the core cloner page and an action has been submitted
-		if( ns_is_admin_page($this->menu_slug) && !empty($this->request['action']) ){
+		// run cloner if on the core cloner page and an action has been submitted and user is allowed to clone
+		if( ns_is_admin_page($this->menu_slug) && !empty($this->request['action']) && $this->check_permisssions() ){
+			$this->dlog_header();
 			$this->process_init();
 		}
 	 }
@@ -190,7 +184,15 @@ class ns_cloner {
 	function admin_assets(){
 		if( ns_is_admin_page($this->menu_slug) || ns_is_admin_subpage($this->menu_slug) ){
 			wp_enqueue_style( 'ns-cloner', NS_CLONER_V3_PLUGIN_URL.'css/ns-cloner-style.css', array(), $this->version );
-			wp_enqueue_script( 'ns-cloner', NS_CLONER_V3_PLUGIN_URL.'js/ns-cloner-script.js', array('jquery'), $this->version );
+			wp_enqueue_script( 'ns-cloner', NS_CLONER_V3_PLUGIN_URL.'js/ns-cloner-script.js', array('jquery','jquery-ui-autocomplete'), $this->version );
+			wp_localize_script(
+				'ns-cloner',
+				'ns_cloner',
+				array(
+					'nonce' => wp_create_nonce('ns_cloner'),
+					'ajaxurl' => admin_url('/admin-ajax.php')
+				)
+			);
 		}
 	}
 
@@ -214,6 +216,9 @@ class ns_cloner {
 			'ns-cloner-addons',
 			array( $this, 'admin_render_addons_page' )
 		);
+		
+		// TODO: Provide an action or filter or other mechanism for add-ons to more easily add their own menu items
+		// TODO: Update the Registration Templates add-on to use it
 	}
 	
 	function admin_render_main_page(){
@@ -230,32 +235,13 @@ class ns_cloner {
 	
 	 // All setup/validation should take place here
 	 function process_init(){
-
-		// save debug info to logs
-		$this->dlog_break();
-		ns_diag( NS_CLONER_LOG_FILE_DETAILED );
-		$this->dlog_break();
-		$this->start_time = microtime(true);
-		$this->dlog( 'START TIME: '.$this->start_time );
-	 	$this->dlog( 'ENTER ns_cloner::process_init' );
-		$this->dlog( 'RUNNING NS Cloner version: <strong>' . $this->version . '</strong>' );			
-		$this->dlog( 'ADDONS: '.join(', ',array_map('get_class',$this->addons)) );
-		$this->dlog( 'ACTION: '.$this->current_action );			
-		$this->dlog( 'CLONING MODE: '.$this->current_clone_mode );
-		$this->dlog( 'FILTERED REQUEST: '.nl2br(print_r($this->request,true)) );
 		
 		// run startup hook
 		do_action( 'ns_cloner_before_everything', $this );
 		$this->dlog( 'AFTER ACTION ns_cloner_before_everything' );
 		
-		// check user permissions
-		$this->check_permissions();
-		
 		// perform validation 
 		$this->do_validation();
-		
-		// setup db connections
-		$this->set_up_db();
 		
 		// run process if no errors
 		$this->process();
@@ -555,35 +541,22 @@ class ns_cloner {
 		do_action('ns_cloner_after_valid');
 	}
 	
-	// Set source and target databases (use wpdb for efficiency if an addon hasn't filtered the credentials)
-	function set_up_db(){
-		global $wpdb;
-		$default_db_creds = array( 'host'=>DB_HOST, 'name'=>DB_NAME, 'user'=>DB_USER, 'password'=>DB_PASSWORD );
-		$source_db_creds = apply_filters( 'ns_cloner_source_db_credentials', $default_db_creds, $this );
-		if( $source_db_creds !== $default_db_creds ){
-			$this->source_db = @( new ns_wpdb( $source_db_creds['user'], $source_db_creds['password'], $source_db_creds['name'], $source_db_creds['host'] ) );
-			if( !empty($this->source_db->last_error) ){
-				ns_add_admin_notice( __("Could not connect to and select the source database","ns-cloner"), "error", $this->menu_slug, true );
-				wp_redirect(wp_get_referer());
-				exit;
-			}
+	// Define filtered request vars - this comes earlier than specific operation vars 
+	function set_up_request( $request = null ){		
+		// allow filtering of $_REQUEST vars + set up class vars from request
+		$this->request = apply_filters( 'ns_cloner_request_vars', is_null($request)? $_REQUEST : $request );
+		// set action - for all cloning operations will be "process"
+		// this is for flexibility if we eventually want to run admin actions 
+		// further outside of the normal pipeline than can be controlled by modes
+		if( isset($this->request['action']) && !empty($this->request['action']) ){
+			$this->current_action = $this->request['action'];
 		}
-		else{
-			$this->source_db = $wpdb;		
-		}
-		$target_db_creds = apply_filters( 'ns_cloner_target_db_credentials', $default_db_creds, $this );		
-		if( $target_db_creds !== $default_db_creds ){
-			$this->target_db = @( new ns_wpdb( $target_db_creds['user'], $target_db_creds['password'], $target_db_creds['name'], $target_db_creds['host'] ) );
-			if( !empty($this->target_db->last_error) ){
-				ns_add_admin_notice( __("Could not connect to and select the target database","ns-cloner"), "error", $this->menu_slug, true );
-				wp_redirect(wp_get_referer());
-				exit;
-			}
-		}
-		else{
-			$this->target_db = $wpdb;		
-		}
-		do_action('ns_cloner_after_db_setup');
+		// set clone mode - default is "core" and can be extended by addons
+		// used for smaller adjustments that stick to general cloning pipeline
+		// but just add/remove/reorder steps
+		if( isset($this->request['clone_mode']) && !empty($this->request['clone_mode']) ){
+			$this->current_clone_mode = $this->request['clone_mode'];
+		}		
 	}
 
 	// Define all operation specific variables we'll need for core clone operation 
@@ -593,6 +566,26 @@ class ns_cloner {
 	}
 
 	function set_up_source_vars( $source_id, $vars=array('id','prefix','subd','title','upload_dir','upload_url','url') ){
+		// db
+		if( is_null($this->source_db) ){
+			global $wpdb;
+			$default_db_creds = array( 'host'=>DB_HOST, 'name'=>DB_NAME, 'user'=>DB_USER, 'password'=>DB_PASSWORD );
+			$source_db_creds = apply_filters( 'ns_cloner_source_db_credentials', $default_db_creds, $this );
+			if( $source_db_creds !== $default_db_creds ){
+				$this->source_db = @( new ns_wpdb( $source_db_creds['user'], $source_db_creds['password'], $source_db_creds['name'], $source_db_creds['host'] ) );
+				if( !empty($this->source_db->last_error) ){
+					$this->dlog("Could not connect to and select the source database. Error:".$this->source_db->last_error);
+					if( is_network_admin() ){
+						ns_add_admin_notice( __("Could not connect to and select the source database","ns-cloner"), "error", $this->menu_slug, true );
+						wp_redirect(wp_get_referer());
+						exit;
+					}
+				}
+			}
+			else{
+				$this->source_db = $wpdb;	
+			}
+		}
 		//ids
 		if( in_array('id',$vars) ){
 			$this->source_id = $this->report[ __("Old Site ID","ns-cloner") ] = $source_id;
@@ -633,6 +626,26 @@ class ns_cloner {
 	}
 	
 	function set_up_target_vars( $target_id, $vars=array('id','prefix','subd','title','upload_dir','upload_url','url') ){
+		//db
+		if( is_null($this->target_db) ){
+			global $wpdb;
+			$target_db_creds = apply_filters( 'ns_cloner_target_db_credentials', $default_db_creds, $this );		
+			if( $target_db_creds !== $default_db_creds ){
+				$this->target_db = @( new ns_wpdb( $target_db_creds['user'], $target_db_creds['password'], $target_db_creds['name'], $target_db_creds['host'] ) );
+				if( !empty($this->target_db->last_error) ){
+					$this->dlog("Could not connect to and select the target database. Error:".$this->target_db->last_error);
+					if( is_network_admin() ){
+						ns_add_admin_notice( __("Could not connect to and select the target database","ns-cloner"), "error", $this->menu_slug, true );
+						wp_redirect(wp_get_referer());
+						exit;
+					}
+								
+				}
+			}
+			else{
+				$this->target_db = $wpdb;		
+			}
+		}
 		//ids
 		if( in_array('id',$vars) ){
 			$this->target_id = $this->report[ __("New Site ID","ns-cloner") ] = $target_id;
@@ -672,19 +685,40 @@ class ns_cloner {
 		}
 	}
 
+	function ajax_search_sites(){
+		global $wpdb;
+		//wp_verify_nonce('ns_cloner','nonce');
+		if( $this->check_permissions(false) ){
+			header('Content-type:application/json');
+			$matching_sites = array();
+			$search_value = esc_sql( $_REQUEST['term'] );
+			$search_column = is_subdomain_install()? 'domain' : 'path';
+			$results = $wpdb->get_results("SELECT blog_id FROM {$wpdb->base_prefix}blogs WHERE $search_column LIKE '%$search_value%'");
+			foreach( $results as $result ){
+				$details = get_blog_details($result->blog_id);
+				array_push( $matching_sites, array(
+					'value' => $details->blog_id,
+					'label' => "$details->blogname ($details->siteurl)"
+				));
+			}
+			echo json_encode($matching_sites);
+			exit;
+		}
+	}
+
 	/*****************************************
 	 * Utility
 	 */
 	 
-	public static function render( $template ){
+	public static function render( $template, $plugin_dir = NS_CLONER_V3_PLUGIN_DIR ){
 		global $ns_cloner;
-		$default_template = NS_CLONER_V3_PLUGIN_DIR.'/templates/ns-template-'.$template.'.php'; 
-		$filtered_template = apply_filters( 'ns_cloner_template', $default_template );
-		if( !empty($filtered_template) ){
-			do_action( "ns_cloner_before_render", $template );
-			include_once( $filtered_template );
-			do_action( "ns_cloner_after_render", $template );
-		}
+		// Removed filter approach as I think that would affect other template renders once there's a 
+		// filter on ns_cloner_template... otherwise you'd have to add_filter and remove_filter every time.
+		// Just passing in an optional plugin_dir makes a filter unnecessary
+		$render_template = $plugin_dir.'/templates/ns-template-'.$template.'.php'; 
+		do_action( "ns_cloner_before_render", $template );
+		include_once( $render_template );
+		do_action( "ns_cloner_after_render", $template );
 	}
 	 
 	public function log( $message ){
@@ -699,6 +733,20 @@ class ns_cloner {
 	public function dlog_break( $debug_only=false ){
 		if( ($debug_only==true || $this->current_action=="ajax_validate") && !isset($this->request["debug"]) ) return;
 		ns_log_section_break( NS_CLONER_LOG_FILE_DETAILED );
+	}
+	
+	public function dlog_header(){
+		$this->dlog_break();
+		ns_diag( NS_CLONER_LOG_FILE_DETAILED );
+		$this->dlog_break();
+		$this->start_time = microtime(true);
+		$this->dlog( 'START TIME: '.$this->start_time );
+	 	$this->dlog( 'ENTER ns_cloner::process_init' );
+		$this->dlog( 'RUNNING NS Cloner version: <strong>' . $this->version . '</strong>' );			
+		$this->dlog( 'ADDONS: '.join(', ',array_map('get_class',$this->addons)) );
+		$this->dlog( 'ACTION: '.$this->current_action );			
+		$this->dlog( 'CLONING MODE: '.$this->current_clone_mode );
+		$this->dlog( 'FILTERED REQUEST: '.nl2br(print_r($this->request,true)) );
 	}
 	
 	// Get an array of table names which should be copied from a source site
@@ -720,9 +768,8 @@ class ns_cloner {
 		else{
 			// escape '_' characters otherwise they will be interpreted as wildcard single chars in LIKE statement
 			$escaped_prefix = esc_sql(str_replace('_','\_',$prefix));
-			$tables = (array) $db->get_col("SHOW TABLES LIKE '{$escaped_prefix}%'");
+			$tables = $db->get_col("SHOW TABLES LIKE '{$escaped_prefix}%'");
 		}
-		$this->dlog( 'Doing get_site_tables for prefix '.$prefix.' returned tables: '.join(',',$tables) );
 		//apply filter and return
 		return $filter!=true? $tables : apply_filters( "ns_cloner_site_tables", $tables, $db, $prefix, $this );
 	}

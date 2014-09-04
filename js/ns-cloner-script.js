@@ -125,7 +125,7 @@
   					$.each( response.messages, function(index,item){
   						$section = $('#ns-cloner-section-'+item.section);
   						$error_display_location = ($section.length > 0) ? $section.find('.ns-cloner-section-content') : $form;
-  						$('<span class="ns-cloner-error-message"></span>').html( item.message ).prependTo( $error_display_location );
+  						$('<span class="ns-cloner-error-message"></span>').text( item.message ).prependTo( $error_display_location );
   					});
   					// scroll up to the first error message on the page, minus 40px (higher on page) for the admin bar plus a little extra padding
   					var first_error_message_scroll_location = $('.ns-cloner-error-message:first').offset().top - 40;
@@ -144,7 +144,18 @@
   			alert('Sorry, an unidentified error occured. Please refresh try again.');
   		});
   	});
-  	
+
+	// add autocomplete for search box
+	$('.ns-cloner-site-search').autocomplete({
+		source: ns_cloner.ajaxurl + '?action=ns_cloner_search_sites&nonce=' + ns_cloner.nonce,
+		select: function( e, ui ){
+			$(this).nextAll('.ns-cloner-site-select').val( ui.item.value );
+			$(this).nextAll('.button-primary').focus();
+			$(this).val( ui.item.label );
+			return false;
+		}
+	});
+	
   	// turn on repeaters
   	$('.ns-repeater').nsRepeater();
   	

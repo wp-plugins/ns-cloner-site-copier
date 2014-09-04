@@ -672,10 +672,6 @@
 		padding-left: 3.5em;
 		border: solid .7em #eeb400;
 	}
-
-.ns-cloner-error-message a {
-	color: #fdb;
-}
 	
 .ns-cloner-error-message + .ns-cloner-section, .ns-cloner-warning-message + .ns-cloner-section {
 	margin-top: .7em;
