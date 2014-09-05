@@ -3,7 +3,7 @@ Contributors: neversettle
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=53JXD4ENC8MM2&rm=2
 Tags: automate, duplicate, copy, copy site, copier, clone, clone site, cloner, multisite, network, subdomain, subdirectory, subfolder, template
 Requires at least: 3.0.1
-Tested up to: 3.9.1
+Tested up to: 4.0
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -88,6 +88,13 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+= 3.0.3.1 =
+* Fixed bug introduced in 3.0.3 affecting subdirectory mode
+
+= 3.0.3 =
+* Added exception for subsite names to include dashes
+* Updates to support new Registration Templates add-on
+
 = 3.0.2 =
 * Fixed conflicts with some other multisite plugins that were triggering validation errors when attempting a clone
 * Raised number of sites shown by default in "Select Source" dropdown from 100 to 1000 and made parameters for that query filterable 
@@ -176,3 +183,6 @@ Usually this means that the clone operation did not complete successfully. The m
 
 = 3.0.1 =
 * All new V3!
+
+= 3.0.3.1 =
+* Fixed bug introduced in 3.0.3 affecting subdirectory mode
