@@ -88,6 +88,13 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+= 3.0.4 =
+* Added one-click cloning from Manage Sites page
+* Added pre WP 3.7 compatibility
+* New search selector for source sites
+* Revamped logs for better utility/readability
+* Centralized ns_cloner_addon class for maintability
+
 = 3.0.3.1 =
 * Fixed bug introduced in 3.0.3 affecting subdirectory mode
 
@@ -186,3 +193,10 @@ Usually this means that the clone operation did not complete successfully. The m
 
 = 3.0.3.1 =
 * Fixed bug introduced in 3.0.3 affecting subdirectory mode
+
+= 3.0.4 =
+* Added one-click cloning from Manage Sites page
+* Added pre WP 3.7 compatibility
+* New search selector for source sites
+* Revamped logs for better utility/readability
+* Centralized ns_cloner_addon class for maintability

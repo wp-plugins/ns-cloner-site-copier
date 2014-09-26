@@ -14,7 +14,7 @@ function ns_wp_create_site( $site_name, $site_title, $logfile ) {
 	$site_data = wpmu_validate_blog_signup( $site_name, $site_title, $user );
 	$site_errors = array_diff( $baseline_validation['errors']->get_error_messages(), $site_data['errors']->get_error_messages() );
 	if( !empty( $site_errors ) && false ){
-		ns_log_write( "Error creating site with name '$site_name' and title '$site_title'. One or more problems errors detected by WP: ".print_r($site_errors,true), $logfile );
+		ns_log_write( array("Error creating site with name '$site_name' and title '$site_title'. One or more problems errors detected by WP:",$site_errors), $logfile );
 		return false;
 	}
 	$site_id = wpmu_create_blog( $site_data["domain"], $site_data["path"], $site_title, $site_data["user"]->ID , $site_meta, get_current_site()->id );

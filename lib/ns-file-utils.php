@@ -179,9 +179,9 @@ function ns_recursive_dir_copy( $src, $dst, $num=0 ) {
 /**
  * Return an array of all blog upload dir paths
  */
-function ns_get_multisite_upload_paths( $args=array() ){
+function ns_get_multisite_upload_paths( $args=array('limit'=>9999) ){
 	$upload_paths = array();
-	$sites = wp_get_sites($args);
+	$sites = function_exists('wp_get_sites')? wp_get_sites($args) : get_blog_list(0,'all');
 	foreach( $sites as $site ){
 		switch_to_blog($site['blog_id']);
 		$wp_upload_dir = wp_upload_dir();

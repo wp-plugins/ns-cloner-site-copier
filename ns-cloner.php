@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.3.1
+Version: 3.0.4
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -47,12 +47,15 @@ define( 'NS_CLONER_LOG_FILE', NS_CLONER_V3_PLUGIN_DIR . 'logs/ns-cloner-summary.
 define( 'NS_CLONER_LOG_FILE_DETAILED', NS_CLONER_V3_PLUGIN_DIR . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html' );
 define( 'NS_CLONER_LOG_FILE_URL', NS_CLONER_V3_PLUGIN_URL . 'logs/ns-cloner-summary.log' );
 define( 'NS_CLONER_LOG_FILE_DETAILED_URL', NS_CLONER_V3_PLUGIN_URL . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html' );
+require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/kint/Kint.class.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-log-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-file-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-sql-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-wp-utils.php');
+require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-cloner-addon-base.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-cloner-section-base.php');
+require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-sidebar/ns-sidebar.php');
 
 // load after plugins_loaded so that textdomain/translation works
 add_action( 'plugins_loaded', 'ns_cloner_instantiate' );
@@ -91,6 +94,8 @@ class ns_cloner {
 	var $report = array();
 	var $start_time;
 	var $end_time;
+	var $source_db;
+	var $target_db;
 	var $source_id;
 	var $target_id;
 	var $source_prefix;
@@ -123,6 +128,8 @@ class ns_cloner {
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_assets') );		
 		// add admin menus
 		add_action( 'network_admin_menu', array( $this, 'admin_menu_pages' ) );
+		// add quick-clone link
+		add_action( 'manage_sites_action_links', array( $this, 'admin_quick_clone_link'), 10, 3 );
 		// allow additional mode registration
 		$this->clone_modes = apply_filters( 'ns_cloner_clone_modes', array(
 			'core' => array(
@@ -190,10 +197,39 @@ class ns_cloner {
 				'ns_cloner',
 				array(
 					'nonce' => wp_create_nonce('ns_cloner'),
-					'ajaxurl' => admin_url('/admin-ajax.php')
+					'ajaxurl' => admin_url('/admin-ajax.php'),
+					'loadingimg' => NS_CLONER_V3_PLUGIN_URL . 'images/loading.gif'
 				)
 			);
 		}
+	}
+	
+	function admin_quick_clone_link( $action_links, $blog_id, $blog_name ){
+		global $domain;
+		$site_domain = str_replace('www.','',$domain);
+		$site_base = get_current_site()->path;
+		// determine the new clone's name and title
+		// this has to make sure there will be no conflicts with existing sites so keep bumping up the copy number until no existing conflicting sites are found
+		$duplicate_count = 1;
+		do { 
+			$duplicate_count++;
+			$target_name = preg_replace('/\..+$/','',$blog_name)."-$duplicate_count";
+			$target_domain = is_subdomain_install()? $target_name.'.'.$site_domain : $site_domain;
+			$target_path = is_subdomain_install()? $site_base : $site_base.$target_name.'/';
+		} while( domain_exists($target_domain,$target_path) );
+		$target_title = urlencode( get_blog_option($blog_id,'blogname')." (Copy $duplicate_count)" );
+		// add the link to the site action links
+		$link = $this->build_url( array(
+			"action" => "process",
+			"clone_mode" => "core",
+			"source_id" => $blog_id,
+			"target_name" => $target_name,
+			"target_title" => $target_title,
+			"disable_addons" => true,
+			"clone_nonce" => wp_create_nonce("ns_cloner")
+		));
+		$action_links['clone'] = '<span class="clone"><a href="'.$link.'" target="_blank">Clone</a></span>';
+		return $action_links;
 	}
 
 	function admin_menu_pages(){
@@ -255,6 +291,7 @@ class ns_cloner {
 		$this->report[ __('Total process time','ns-cloner') ] = number_format( $this->end_time-$this->start_time, 4 ) .' '. __('seconds','ns-cloner');
 		$this->dlog( 'END TIME: '.$this->end_time );
 		$this->dlog( 'Entire cloning process took: <strong>'.number_format( $this->end_time-$this->start_time, 4 ).'</strong> seconds');
+		$this->dlog_footer();
 		
 		// summary log
 		$this->log( $this->target_url." cloned in ".number_format( $this->end_time-$this->start_time, 4 )." seconds" );
@@ -298,7 +335,7 @@ class ns_cloner {
 
 				// define pipeline steps to go through
 				$this->pipeline_steps = apply_filters( 'ns_cloner_pipeline_steps', $this->pipeline_steps, $this );
-				$this->dlog( "PIPELINE STEPS: ".nl2br(print_r(array_keys($this->pipeline_steps),true)) );
+				$this->dlog( array("PIPELINE STEPS:",array_keys($this->pipeline_steps)) );
 				
 				foreach( $this->pipeline_steps as $step=>$function ){					
 					do_action( "ns_cloner_before_$step" );
@@ -307,7 +344,7 @@ class ns_cloner {
 						call_user_func($function,$this);
 					}
 					else{
-						$this->dlog("Function ".print_r($function,true)." for this step was not callable.");
+						$this->dlog( array("Function for this step was not callable:",$function) );
 					}
 					do_action( "ns_cloner_after_$step" );
 					$this->dlog( "AFTER ACTION ns_cloner_after_$step" );					
@@ -372,10 +409,10 @@ class ns_cloner {
 		$replace = apply_filters( 'ns_cloner_replace_items', $replace, $this);
 		$regex_search = apply_filters( 'ns_cloner_regex_search_items', array(), $this );
 		$regex_replace = apply_filters( 'ns_cloner_regex_replace_items', array(), $this );
-		$this->dlog("String search targets: ".nl2br(print_r($search,true)));
-		$this->dlog("String search replacements: ".nl2br(print_r($replace,true)));
-		$this->dlog("Regex search targets: ".nl2br(print_r($regex_search,true)));
-		$this->dlog("Regex search replacements: ".nl2br(print_r($regex_replace,true)));
+		$this->dlog( array("String search targets:",$search) );
+		$this->dlog( array("String search replacements:",$replace) );
+		$this->dlog( array("Regex search targets:",$regex_search) );
+		$this->dlog( array("Regex search replacements:",$regex_replace) );
 		
 		// Sort and filter replacements to intelligently avoid compounding replacement issues - more details in function comments in lib/ns-utils.php 
 		if( apply_filters('ns_do_search_replace_validation',true) ){
@@ -384,10 +421,10 @@ class ns_cloner {
 			$replace = apply_filters( 'ns_cloner_replace_items_after_sequence', $replace, $this);
 			$regex_search = apply_filters( 'ns_cloner_regex_search_items_after_sequence',$regex_search, $this );
 			$regex_replace = apply_filters( 'ns_cloner_regex_replace_items_after_sequence', $regex_replace, $this );
-			$this->dlog("String search targets after sequence: ".nl2br(print_r($search,true)));
-			$this->dlog("String search replacements after sequence: ".nl2br(print_r($replace,true)));
-			$this->dlog("Regex search targets after sequence: ".nl2br(print_r($regex_search,true)));
-			$this->dlog("Regex search replacements after sequence: ".nl2br(print_r($regex_replace,true)));
+			$this->dlog( array("String search targets after sequence:",$search) );
+			$this->dlog( array("String search replacements after sequence:",$replace) );
+			$this->dlog( array("Regex search targets after sequence:",$regex_search) );
+			$this->dlog( array("Regex search replacements after sequence:",$regex_replace) );
 		}
 		
 		// Fetch source tables and start cloning
@@ -420,7 +457,7 @@ class ns_cloner {
 				$this->dlog_break();
 				
 				// Drop the target table if it already exists to avoid conflicts
-				if( apply_filters('ns_cloner_do_drop_target_table',true,$this) ){
+				if( apply_filters('ns_cloner_do_drop_target_table',true,$target_table,$this) ){
 					$query = "DROP TABLE IF EXISTS ".$quoted_target_table;
 					$this->target_db->query( $query );
 					$this->handle_any_db_errors( $this->target_db, $query );
@@ -453,7 +490,7 @@ class ns_cloner {
 					}
 					// perform replacements
 					foreach($row as $field=>$value){
-						$row_count_replacements_made = ns_recursive_search_replace( $value, $search, $replace, $regex_search, $regex_replace, NS_CLONER_LOG_FILE_DETAILED );
+						$row_count_replacements_made = ns_recursive_search_replace( $value, $search, $replace, $regex_search, $regex_replace, isset($this->request['case_sensitive']) );
 						$row[$field] = apply_filters( 'ns_cloner_field_value', $value, $field, $row, $this );
 						$count_replacements_made += $row_count_replacements_made;
 					}
@@ -503,13 +540,23 @@ class ns_cloner {
 		return $steps;
 	}
 	
-	// Check whether the current user can run a clone operation and optionally die or just return false
+	// Check whether the current user can run a clone operation + whether nonce is valid, then optionally die or just return false
 	function check_permissions( $die=true ){
 		$required_capability = apply_filters( "ns_cloner_{$this->current_action}_required_capability", $this->capability, $this );
 		$can_do = current_user_can( $required_capability ); 
 		if( !$can_do ) {
 			if( $die ){
 				wp_die( __('You don\'t have sufficient permissions to create site clones.','ns-cloner') );
+				exit;
+			}
+			else {
+				return false;
+			}
+		}
+		$valid_nonce = wp_verify_nonce( $this->request['clone_nonce'], 'ns_cloner' );
+		if( !$valid_nonce ){
+			if( $die ){
+				wp_die( __('Invalid nonce.','ns-cloner') );
 				exit;
 			}
 			else {
@@ -524,7 +571,7 @@ class ns_cloner {
 	function do_validation(){
 		$validation_errors = apply_filters( "ns_cloner_valid_errors", array(), $this );
 		if( !empty($validation_errors) ){
-			$this->dlog( "VALIDATION ERRORS: ".nl2br(print_r($validation_errors,true)) );
+			$this->dlog( array("VALIDATION ERRORS:",$validation_errors) );
 			if( $this->current_action == 'ajax_validate' ){
 				header('Content-Type: application/json');
 				echo json_encode( array("status"=>"error","messages"=>$validation_errors) );
@@ -544,7 +591,7 @@ class ns_cloner {
 	// Define filtered request vars - this comes earlier than specific operation vars 
 	function set_up_request( $request = null ){		
 		// allow filtering of $_REQUEST vars + set up class vars from request
-		$this->request = apply_filters( 'ns_cloner_request_vars', is_null($request)? $_REQUEST : $request );
+		$this->request = apply_filters( 'ns_cloner_request_vars', is_null($request)? array_merge($_GET,$_POST) : $request );
 		// set action - for all cloning operations will be "process"
 		// this is for flexibility if we eventually want to run admin actions 
 		// further outside of the normal pipeline than can be controlled by modes
@@ -687,7 +734,6 @@ class ns_cloner {
 
 	function ajax_search_sites(){
 		global $wpdb;
-		//wp_verify_nonce('ns_cloner','nonce');
 		if( $this->check_permissions(false) ){
 			header('Content-type:application/json');
 			$matching_sites = array();
@@ -726,27 +772,43 @@ class ns_cloner {
 	}
 	
 	public function dlog( $message, $debug_only=false ){
-		if( ($debug_only==true || $this->current_action=="ajax_validate") && !isset($this->request["debug"]) ) return;
+		$is_ajax = $this->current_action=="ajax_validate" || (defined('DOING_AJAX') && DOING_AJAX==true);
+		$is_extra_debug_on = isset($this->request["debug"]) && $this->request["debug"]==true;
+		if( ($debug_only==true || $is_ajax) && !$is_extra_debug_on ) return;
 		ns_log_write( $message, NS_CLONER_LOG_FILE_DETAILED );
 	}
 	
 	public function dlog_break( $debug_only=false ){
-		if( ($debug_only==true || $this->current_action=="ajax_validate") && !isset($this->request["debug"]) ) return;
+		$is_ajax = $this->current_action=="ajax_validate" || (defined('DOING_AJAX') && DOING_AJAX==true);
+		$is_extra_debug_on = isset($this->request["debug"]) && $this->request["debug"]==true;
+		if( ($debug_only==true || $is_ajax) && !$is_extra_debug_on ) return;
 		ns_log_section_break( NS_CLONER_LOG_FILE_DETAILED );
 	}
 	
 	public function dlog_header(){
+		$is_ajax = $this->current_action=="ajax_validate" || (defined('DOING_AJAX') && DOING_AJAX==true);
+		$is_extra_debug_on = isset($this->request["debug"]) && $this->request["debug"]==true;
+		if( $is_ajax && !$is_extra_debug_on ) return;
+		ns_log_open( NS_CLONER_LOG_FILE_DETAILED );
 		$this->dlog_break();
 		ns_diag( NS_CLONER_LOG_FILE_DETAILED );
 		$this->dlog_break();
 		$this->start_time = microtime(true);
-		$this->dlog( 'START TIME: '.$this->start_time );
+		$this->dlog( 'START TIME: '.$this->start_time.' ('.date('Y-m-d H:i:s').')' );
 	 	$this->dlog( 'ENTER ns_cloner::process_init' );
 		$this->dlog( 'RUNNING NS Cloner version: <strong>' . $this->version . '</strong>' );			
 		$this->dlog( 'ADDONS: '.join(', ',array_map('get_class',$this->addons)) );
 		$this->dlog( 'ACTION: '.$this->current_action );			
 		$this->dlog( 'CLONING MODE: '.$this->current_clone_mode );
-		$this->dlog( 'FILTERED REQUEST: '.nl2br(print_r($this->request,true)) );
+		$this->dlog( array('FILTERED REQUEST:',$this->request) );
+		$this->dlog_break();
+	}
+	
+	public function dlog_footer(){
+		$is_ajax = $this->current_action=="ajax_validate" || (defined('DOING_AJAX') && DOING_AJAX==true);
+		$is_extra_debug_on = isset($this->request["debug"]) && $this->request["debug"]==true;
+		if( $is_ajax && !$is_extra_debug_on ) return;
+		ns_log_close( NS_CLONER_LOG_FILE_DETAILED );
 	}
 	
 	// Get an array of table names which should be copied from a source site
@@ -801,6 +863,11 @@ class ns_cloner {
 			}
 		}
 		return $recent_logs;
+	}
+	
+	// Encode and return a url that will trigger a cloning operation by visiting
+	public function build_url( $request ){
+		return network_admin_url( "/admin.php?page=".$this->menu_slug."&".http_build_query($request) );
 	}
 
 	/********************************

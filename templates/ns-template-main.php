@@ -1,10 +1,10 @@
 <div class="wrap ns-cloner-wrapper">
 	
 	<div class="ns-cloner-header">
-		<a href="/wp-admin/network/admin.php?page=ns-cloner"><img src="<?php echo NS_CLONER_V3_PLUGIN_URL; ?>images/ns-cloner-top-logo.png" alt="NS Cloner" /></a>
+		<a href="<?php echo network_admin_url('/admin.php?page='.$ns_cloner->menu_slug); ?>"><img src="<?php echo NS_CLONER_V3_PLUGIN_URL; ?>images/ns-cloner-top-logo.png" alt="NS Cloner" /></a>
 	</div>
 	
-	<form class="ns-cloner-form" action="?page=ns-cloner&action=process" method="post" enctype="multipart/form-data">
+	<form class="ns-cloner-form" action="<?php echo network_admin_url('/admin.php?page='.$ns_cloner->menu_slug.'&action=process'); ?>" method="post" enctype="multipart/form-data">
 			
 		<!-- report from last cloner operation -->
 		<?php ns_cloner::render('report'); ?>
@@ -40,6 +40,9 @@
 			<strong><?php _e( 'WARNING:', 'ns-cloner' ); ?></strong>
 			<?php _e( 'We have made an incredibly complex process ridiculously easy with this powerful plugin. We have tested thoroughly and used this exact tool in our own live multisite environments. However, our comfort level should not dictate your precautions. If you\'re confident in your testing and back-up scheme - which you should have in place anyway ;) - then by all means - start cloning like there\'s no tomorrow!', 'ns-cloner' ); ?>
 		</div>
+		
+		<!-- security nonce -->
+		<input name="clone_nonce" value="<?php echo wp_create_nonce('ns_cloner'); ?>" type="hidden" />
 		
 	</form>
 	

@@ -60,7 +60,7 @@ function ns_set_search_replace_sequence( &$search, &$replace, &$regex_search, &$
  * @param array $regex_replace array with text value to replace $regex_search values with
  * @return int number of replacements made
  */
-function ns_recursive_search_replace( &$data, $search, $replace, $regex_search=array(), $regex_replace=array() ){
+function ns_recursive_search_replace( &$data, $search, $replace, $regex_search=array(), $regex_replace=array(), $case_sensitive=false ){
 	$is_serialized = is_serialized($data);
 	$string_replacements_made = $regex_replacements_made = 0;
 	// unserialize if need be
@@ -70,12 +70,13 @@ function ns_recursive_search_replace( &$data, $search, $replace, $regex_search=a
 	// run through replacements for strings, arrays - other types are unsupported to vaoid
 	if( is_array($data) ){
 		foreach ($data as $key => $value) {
-			ns_recursive_search_replace( $data[$key], $search, $replace, $regex_search, $regex_replace );
+			ns_recursive_search_replace( $data[$key], $search, $replace, $regex_search, $regex_replace, $case_sensitive );
 		}
 	}
 	elseif( is_string($data) ){
 		// simple string replacment - most of the time this is all that is needed
-		$data = str_ireplace( $search, $replace, $data, $string_replacements_made );
+		$replace_func = $case_sensitive? 'str_replace' : 'str_ireplace';
+		$data = $replace_func( $search, $replace, $data, $string_replacements_made );
 		// advanced regex replacement - this will be skipped most of the time
 		if( !empty($regex_search) && !empty($regex_replace) ){
 			$data = preg_replace(

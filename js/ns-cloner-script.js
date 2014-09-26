@@ -22,6 +22,7 @@
   	// set up action when source site is changed
   	$('select[name=source_id]').change(function(){
   		$('.ns-cloner-form').trigger('ns_cloner_source_refresh');
+  		$(this).prevAll('.ns-cloner-site-search').val('');
   	});
   	
   	// make section slide up / down when section toggle is clicked
@@ -40,12 +41,17 @@
   	});
   	
   	// show copy logs box before going to support, then close copy logs box once continue button is clicked
-  	$('.ns-cloner-copy-logs-trigger').click(function(e){
+  	$('.ns-support-widget a').click(function(e){
   		$('.ns-cloner-copy-logs').fadeIn();
   		e.preventDefault();
   	});
   	$('.ns-cloner-copy-logs-content a').click(function(){
   		$('.ns-cloner-copy-logs').fadeOut();
+  	});
+  	$('.ns-cloner-copy-logs').click(function(e){
+  		if( e.target === this ){
+  			$(this).fadeOut();
+  		}
   	});
   	
   	// position clone button fixed 
@@ -132,12 +138,14 @@
   					$('html,body').animate({scrollTop:first_error_message_scroll_location});
   					// set button back to be clickable again for after they fix errors
   					$button.val( $button.data('current_action') ).css('cursor','pointer');
-  					$button.removeData();
-  					
+  					$button.removeData();  					
   				}
   				// something weird fell through if it hits here - shouldn't other than maybe a connection error
   				else{
   					alert('Sorry, an unidentified error occured. Please refresh and try again.');
+  					// set button back to be clickable again for after they fix errors
+  					$button.val( $button.data('current_action') ).css('cursor','pointer');
+  					$button.removeData();  	
   				}
   			}
   		).fail(function(){
@@ -147,11 +155,17 @@
 
 	// add autocomplete for search box
 	$('.ns-cloner-site-search').autocomplete({
-		source: ns_cloner.ajaxurl + '?action=ns_cloner_search_sites&nonce=' + ns_cloner.nonce,
+		source: ns_cloner.ajaxurl + '?action=ns_cloner_search_sites&clone_nonce=' + ns_cloner.nonce,
+		search: function( e, ui ){
+			$(this).css('background','white url('+ns_cloner.loadingimg+') 99% 50% no-repeat');
+		},
+		response: function( e, ui ){
+			$(this).css('background-image','none');
+		},
 		select: function( e, ui ){
-			$(this).nextAll('.ns-cloner-site-select').val( ui.item.value );
+			$(this).nextAll('.ns-cloner-site-select').val( ui.item.value ).trigger('change');
 			$(this).nextAll('.button-primary').focus();
-			$(this).val( ui.item.label );
+			$(this).val( ui.item.label.match(/\((http.*)\)/)[1] );
 			return false;
 		}
 	});

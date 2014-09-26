@@ -20,6 +20,9 @@ class ns_cloner_section {
 		// if this section is supported for current clone mode, set active and run init (where all process modification, etc will take place) and
 		// setup validation so that child section classes can just put stuff in their validate function and have it work automatically
 		if( in_array( $this->cloner->current_clone_mode, $this->modes_supported ) ){
+			// make sure addons haven't been disabled
+			if( isset($this->cloner->request['disable_addons']) && $this->cloner->request['disable_addons']==true ) return;
+			// trigger setup
 			$this->is_active = true;
 			add_action( 'ns_cloner_before_everything', array($this,'init') );
 			add_filter( 'ns_cloner_valid_errors', array($this,'validate') );

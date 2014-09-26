@@ -1,5 +1,7 @@
 <?php
 
+require_once (dirname(__FILE__).'/kint/Kint.class.php');
+
 /**
  * Check writeability
  */
@@ -21,16 +23,59 @@ function ns_log_check( $logfile, $savefile=true ) {
 /**
  * Log
  */
-function ns_log_write( $message, $logfile, $linebreak_after=true ) {
+
+function ns_log_open( $logfile ){
+	$open =
+<<<HTML
+<html>
+	<head>
+		<style>
+			table{ width:100%; border: solid 1px #ddd; }
+			td{ padding: 0 .9em; border-bottom: solid 1px #ddd; }
+			td:first-child{ background:#ddd; font:bold .9em monospace; text-align:center; color:#555; width:3em; }
+			td span{ float:left; display:inline-block; padding: 4px 6px 4px 0; }
+			.kint{ display:inline-block; margin: 0 0 0 6px !important; }
+			.kint footer{ display:none; }
+		</style>
+	</head>
+	<body>
+		<table cellspacing="0" cellpadding="4" width="100%">
+HTML;
+	error_log( $open, 3, $logfile );
+}
+
+function ns_log_write( $message, $logfile  ) {
+	global $ns_log_start_time;
+	// save start time if it's not set so we can compare against it for getting current relative # of seconds into clone
+	if( is_null($ns_log_start_time) ){
+		$ns_log_start_time = microtime(true);
+	}
 	if( !is_writable($logfile) ){
 		ns_log_check( $logfile );
 		if( !is_writable($logfile) ){
 			return false;
 		}
 	}
-	$start = $linebreak_after? date_i18n('Y-m-d H:i:s')." - " : ""; 
-	$end = $linebreak_after? "\n<br/>" : "\n";
-	error_log( $start.$message.$end, 3, $logfile );
+	// calculate current time into process and set up message
+	$current_seconds = number_format( microtime(true) - $ns_log_start_time, 4 );
+	$formatted_message = "";
+	foreach( (array)$message as $message_part ){
+		$formatted_message .= is_string($message_part)? "<span>$message_part</span>" : @Kint::dump($message_part);
+	}
+	// log it!
+	$time_cell = "<td>{$current_seconds}s</td>";
+	$message_cell = "<td>{$formatted_message}</td>";
+	error_log( "<tr>{$time_cell}{$message_cell}</tr>", 3, $logfile );
+}
+
+function ns_log_close( $logfile ){
+	$close =
+<<<HTML
+		</table>
+	</body>
+</html>
+HTML;
+	error_log( $close, 3, $logfile );
 }
 
 /**
@@ -65,19 +110,9 @@ function ns_diag ( $logfile ) {
 	ns_log_section_break( $logfile );
 	
 	ns_log_write( "PLUGIN DIAGNOSTICS:", $logfile );
-	ns_log_write( "<ul>", $logfile, false );
 	foreach( get_plugins() as $plugin_file=>$data ){
-		ns_log_write(
-			"<li>".
-				"$data[Name] $data[Version] by $data[Author]".
-				( $data["Network"]==true? " <strong>Network Enabled</strong>" : "" ).
-			"</li>",
-			$logfile,
-			false
-		);
+		ns_log_write( "$data[Name] $data[Version] by $data[Author]".( $data["Network"]==true? " <strong>Network Enabled</strong>" : ""), $logfile );
 	}
-	ns_log_write( "</ul>", $logfile, false );
-
 	
 }
 
