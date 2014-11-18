@@ -1,0 +1,311 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: NS Cloner\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-09-10 15:18-0600\n"
+"PO-Revision-Date: 2014-09-10 15:20-0700\n"
+"Last-Translator: Nick Parsons <nick@neversettle.it>\n"
+"Language-Team: Never Settle <dev@neversettle.it>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 1.6.5\n"
+
+#: ns-cloner.php:131
+msgid "Normal Clone"
+msgstr ""
+
+#: ns-cloner.php:132
+msgid "Clone"
+msgstr ""
+
+#: ns-cloner.php:133
+msgid "Take an existing site and create a brand new copy of it at another url."
+msgstr ""
+
+#: ns-cloner.php:134
+msgid "Clone complete!"
+msgstr ""
+
+#: ns-cloner.php:161
+msgid ""
+"Sorry, the NS Cloner is a multisite only plugin. It won't work on a single "
+"site like this. Read more <a href='http://codex.wordpress.org/"
+"Create_A_Network' target='_blank'>here</a>"
+msgstr ""
+
+#: ns-cloner.php:204 ns-cloner.php:205
+msgid "NS Cloner V3"
+msgstr ""
+
+#: ns-cloner.php:215 ns-cloner.php:216
+msgid "Add-ons"
+msgstr ""
+
+#: ns-cloner.php:257
+msgid "Total process time"
+msgstr ""
+
+#: ns-cloner.php:257
+msgid "seconds"
+msgstr ""
+
+#: ns-cloner.php:265
+msgid "Log file"
+msgstr ""
+
+#: ns-cloner.php:273
+#, php-format
+msgid ""
+"WARNING! The cloned site has the same upload path (%s) as site id(s) %s. If "
+"you leave the upload_path options on both sites as they are, "
+"<strong>deleting either site will delete all of the other's uploads.</strong>"
+msgstr ""
+
+#: ns-cloner.php:347
+msgid ""
+"Unable to create new site for cloning operation. Check the cloner logs for "
+"details."
+msgstr ""
+
+#: ns-cloner.php:469
+msgid "Tables cloned"
+msgstr ""
+
+#: ns-cloner.php:470
+msgid "Replacements made"
+msgstr ""
+
+#: ns-cloner.php:484
+msgid "Files/directories copied"
+msgstr ""
+
+#: ns-cloner.php:514
+msgid "You don't have sufficient permissions to create site clones."
+msgstr ""
+
+#: ns-cloner.php:581
+msgid "Could not connect to and select the source database"
+msgstr ""
+
+#: ns-cloner.php:593
+msgid "Old Site ID"
+msgstr ""
+
+#: ns-cloner.php:625
+msgid "Old Site"
+msgstr ""
+
+#: ns-cloner.php:640
+msgid "Could not connect to and select the target database"
+msgstr ""
+
+#: ns-cloner.php:653
+msgid "New Site ID"
+msgstr ""
+
+#: ns-cloner.php:685
+msgid "New Site"
+msgstr ""
+
+#: ns-cloner.php:786
+#, php-format
+msgid "Uh-oh - there was an sql error: %s."
+msgstr ""
+
+#: lib/ns-log-utils.php:9
+#, php-format
+msgid ""
+"Unable to create log file %s. Functionality will work, but you won't have "
+"logs in case anything needs debugging. Is that file's parent directory "
+"writable by the server?"
+msgstr ""
+
+#: sections/ns-cloner-section-additional-settings.php:10
+msgid "Additional Settings"
+msgstr ""
+
+#: sections/ns-cloner-section-additional-settings.php:13
+msgid ""
+"Capture in-depth debugging info in logs (basic information always logged)"
+msgstr ""
+
+#: sections/ns-cloner-section-copy-files-cta.php:10
+msgid "Copy Media Files"
+msgstr ""
+
+#: sections/ns-cloner-section-copy-files-cta.php:12
+#: sections/ns-cloner-section-copy-tables-cta.php:12
+#: sections/ns-cloner-section-copy-users-cta.php:12
+#: sections/ns-cloner-section-search-replace-cta.php:12
+msgid ""
+"The NS Cloner can do a LOT more! Checkout the Add-ons area or <a href="
+"\"http://neversettle.it/ns-cloner-bundles-features\" target=\"_blank"
+"\">Compare all available Bundles and features!</a>"
+msgstr ""
+
+#: sections/ns-cloner-section-copy-tables-cta.php:10
+msgid "Clone Tables"
+msgstr ""
+
+#: sections/ns-cloner-section-copy-users-cta.php:10
+msgid "Copy Users"
+msgstr ""
+
+#: sections/ns-cloner-section-create-target.php:10
+msgid "Create New Site"
+msgstr ""
+
+#: sections/ns-cloner-section-create-target.php:10
+msgid "Create Site"
+msgstr ""
+
+#: sections/ns-cloner-section-create-target.php:12
+msgid "Give the Target site a Title"
+msgstr ""
+
+#: sections/ns-cloner-section-create-target.php:14
+msgid "Give the Target site a URL (or \"Name\" in WP terminology)"
+msgstr ""
+
+#: sections/ns-cloner-section-search-replace-cta.php:10
+msgid "Search and Replace"
+msgstr ""
+
+#: sections/ns-cloner-section-select-source.php:10
+msgid "Select Source"
+msgstr ""
+
+#: sections/ns-cloner-section-select-source.php:21
+msgid ""
+"Pick an existing source site to clone. If you haven't already, now is a "
+"great time to set up a \"template\" site exactly the way you want the new "
+"clone site to start out (theme, plugins, settings, etc.)."
+msgstr ""
+
+#: templates/ns-template-addons.php:8
+msgid "NS Cloner Add-On Manager"
+msgstr ""
+
+#: templates/ns-template-addons.php:33
+msgid "Learn More"
+msgstr ""
+
+#: templates/ns-template-addons.php:35
+#: templates/ns-template-side-add-ons.php:15
+msgid "Installed"
+msgstr ""
+
+#: templates/ns-template-addons.php:37
+msgid "Buy Now"
+msgstr ""
+
+#: templates/ns-template-main.php:18
+msgid "Select Cloning Mode"
+msgstr ""
+
+#: templates/ns-template-main.php:19
+msgid "Collapse All"
+msgstr ""
+
+#: templates/ns-template-main.php:20
+msgid "Expand All"
+msgstr ""
+
+#: templates/ns-template-main.php:40
+msgid "WARNING:"
+msgstr ""
+
+#: templates/ns-template-main.php:41
+msgid ""
+"We have made an incredibly complex process ridiculously easy with this "
+"powerful plugin. We have tested thoroughly and used this exact tool in our "
+"own live multisite environments. However, our comfort level should not "
+"dictate your precautions. If you're confident in your testing and back-up "
+"scheme - which you should have in place anyway ;) - then by all means - "
+"start cloning like there's no tomorrow!"
+msgstr ""
+
+#: templates/ns-template-preemptive-warnings.php:7
+#, php-format
+msgid ""
+"This host's max_execution_time is set to %d seconds - we generally recommend "
+"at least 60 seconds for running the Cloner. You may want to increase the "
+"max_execution_time in php.ini (or wherever your host supports PHP "
+"configuration updates) to avoid any timeout errors."
+msgstr ""
+
+#: templates/ns-template-preemptive-warnings.php:14
+#, php-format
+msgid ""
+"This host's memory_limit is set to %dMB - we generally recommend at least "
+"128MB for running the Cloner. You may want to increase the memory_limit in "
+"php.ini (or wherever your host supports PHP configuration updates) to avoid "
+"any out-of-memory errors."
+msgstr ""
+
+#: templates/ns-template-preemptive-warnings.php:33
+#, php-format
+msgid ""
+"It appears that you have a non-standard (possibly incorrect) .htaccess file "
+"for a multisite install. Cloned sites will not work if rewrites are not "
+"configured correctly. Please check the recommended htaccess settings <a href="
+"\"%s\" target=\"_blank\">here</a> and make sure your .htaccess file matches."
+msgstr ""
+
+#: templates/ns-template-preemptive-warnings.php:44
+msgid ""
+"It looks like you have another plugin installed which is applying its own "
+"additional site-meta creation requirements. The Cloner will still work, but "
+"you should be aware that sites created with the Cloner might not appear "
+"normally in the other plugin."
+msgstr ""
+
+#: templates/ns-template-report.php:26
+msgid "OK, Close Report"
+msgstr ""
+
+#: templates/ns-template-side-add-ons.php:2
+msgid "Add-Ons"
+msgstr ""
+
+#: templates/ns-template-side-add-ons.php:17
+msgid "Buy / Info"
+msgstr ""
+
+#: templates/ns-template-side-shares.php:3
+msgid ""
+"If the Cloner has saved you lots of time, tell everyone with a 5-star rating!"
+msgstr ""
+
+#: templates/ns-template-side-shares.php:16
+msgid "Stay up to date with updates, new plugins and all the good stuff!"
+msgstr ""
+
+#: templates/ns-template-side-shares.php:45
+msgid ""
+"Have any issues with the cloner, or ideas on how to make it better? We'd "
+"love to hear from you."
+msgstr ""
+
+#: templates/ns-template-side-shares.php:46
+msgid "Support & Feature Requests"
+msgstr ""
+
+#: templates/ns-template-side-shares.php:49
+msgid ""
+"If you're going to open a support request, could you please copy the log "
+"urls listed below and paste them at the bottom of your support request so we "
+"can give you better and faster help? Thank you!"
+msgstr ""
+
+#: templates/ns-template-side-shares.php:52
+msgid "Continue to Support"
+msgstr ""
