@@ -88,6 +88,12 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+
+= 3.0.4.1 =
+* Fixed minor issue and removed [[ *Notice*: Undefined variable: default_db_creds ]] showing up with WP_DEBUG turned on
+* Corrected mismatched version between plugin and logs
+* Added basic, disabled feature for emailing new users with site login and password (not currently active - primarily preparation for a new Registration Templates Add-on feature and option)  
+
 = 3.0.4 =
 * Added one-click cloning from Manage Sites page
 * Added pre WP 3.7 compatibility
