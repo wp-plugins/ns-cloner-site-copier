@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.4.1
+Version: 3.0.4.2
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -47,7 +47,12 @@ define( 'NS_CLONER_LOG_FILE', NS_CLONER_V3_PLUGIN_DIR . 'logs/ns-cloner-summary.
 define( 'NS_CLONER_LOG_FILE_DETAILED', NS_CLONER_V3_PLUGIN_DIR . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html' );
 define( 'NS_CLONER_LOG_FILE_URL', NS_CLONER_V3_PLUGIN_URL . 'logs/ns-cloner-summary.log' );
 define( 'NS_CLONER_LOG_FILE_DETAILED_URL', NS_CLONER_V3_PLUGIN_URL . 'logs/ns-cloner-' . date("Ymd-His", time()) . '.html' );
-require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/kint/Kint.class.php');
+
+// load Kint if no other plugins already have
+if ( !class_exists( 'Kint' ) ) {
+	require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/kint/Kint.class.php');
+}
+
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-log-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-file-utils.php');
@@ -69,7 +74,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.4.1';
+	var $version = '3.0.4.2';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(

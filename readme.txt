@@ -89,6 +89,9 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.4.2 =
+* Added condition to only load Kint (used for logging) if no other plugin already has
+
 = 3.0.4.1 =
 * Fixed minor issue and removed [[ *Notice*: Undefined variable: default_db_creds ]] showing up with WP_DEBUG turned on
 * Corrected mismatched version between plugin and logs
