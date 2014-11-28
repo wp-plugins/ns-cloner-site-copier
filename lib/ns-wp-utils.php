@@ -56,6 +56,8 @@ function ns_wp_add_user( $target_id, $useremail, $username, $userpass = '', $use
 		$user_id = wpmu_create_user( $username, $userpass, $useremail );
 		if( $user_id != false ){
 			ns_log_write( "Created new user '$username' with email '$useremail'", $logfile );
+			// send notification to new users
+			//wpmu_welcome_notification($target_id, $user_id, $userpass, 'New Site with ID: ' . $target_id);
 		}
 		else{
 			ns_log_write( "Failed creating user '$username' with email '$useremail' - that username or email is probably already taken for a different user.", $logfile );

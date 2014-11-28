@@ -89,6 +89,9 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.4.3 =
+* Added another condition on ensuring kintParser is not already loaded from somewhere else
+
 = 3.0.4.2 =
 * Added condition to only load Kint (used for logging) if no other plugin already has
 

@@ -1,6 +1,8 @@
 <?php
 
-require_once (dirname(__FILE__).'/kint/Kint.class.php');
+if ( !class_exists( 'Kint' ) ) {
+	require_once (dirname(__FILE__).'/kint/Kint.class.php');
+}
 
 /**
  * Check writeability
