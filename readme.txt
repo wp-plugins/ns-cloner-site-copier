@@ -89,6 +89,9 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.4.4 =
+* Added support for new feature and setting in Content and Users Add-on to send notifications to new users
+
 = 3.0.4.3 =
 * Added another condition on ensuring kintParser is not already loaded from somewhere else
 
