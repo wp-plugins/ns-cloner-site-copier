@@ -89,6 +89,10 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.4.5 =
+* Adding compatibility fix for User Access Manager plugin
+* Removed site title find/replace functionality
+
 = 3.0.4.4 =
 * Added support for new feature and setting in Content and Users Add-on to send notifications to new users
 
