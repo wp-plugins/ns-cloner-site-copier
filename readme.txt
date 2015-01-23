@@ -89,6 +89,9 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.4.6 = 
+* Added compatibility fix for CSS & Javascript Toolbox plugin
+
 = 3.0.4.5 =
 * Adding compatibility fix for User Access Manager plugin
 * Removed site title find/replace functionality

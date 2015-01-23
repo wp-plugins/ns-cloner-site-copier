@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.4.5
+Version: 3.0.4.6
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -61,6 +61,7 @@ require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/ns-wp-utils.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-cloner-addon-base.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-cloner-section-base.php');
 require_once(NS_CLONER_V3_PLUGIN_DIR.'/ns-sidebar/ns-sidebar.php');
+require_once(NS_CLONER_V3_PLUGIN_DIR.'/lib/plugin-compatibility.php');
 
 // load after plugins_loaded so that textdomain/translation works
 add_action( 'plugins_loaded', 'ns_cloner_instantiate' );
@@ -74,7 +75,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.4.5';
+	var $version = '3.0.4.6';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -497,14 +498,12 @@ class ns_cloner {
 						$row[$field] = apply_filters( 'ns_cloner_field_value', $value, $field, $row, $this );
 						$count_replacements_made += $row_count_replacements_made;
 					}
-					// change format for plugins that have a column w/ same name as a WP table but different data type (currently just User Access Manager)
-					$format = null;
-					if( preg_match('/uam_accessgroup_to_object$/',$source_table) ){
-						$format = array('%s','%s','%d');
-					}
-					// actually copy row
+					// add hooks for compatibility fixes and insert the values
+					$format = apply_filters( 'ns_cloner_insert_format', null, $source_table, $target_table );
+					$row = apply_filters( 'ns_cloner_insert_values', $row, $source_table, $target_table );
 					$this->target_db->insert( $target_table, $row, $format );
 					$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
+					do_action( 'ns_cloner_after_insert', $row, $source_table, $target_table );
 				} // end rows loop
 				
 			} // end tables loop
