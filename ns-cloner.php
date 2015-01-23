@@ -499,11 +499,11 @@ class ns_cloner {
 						$count_replacements_made += $row_count_replacements_made;
 					}
 					// add hooks for compatibility fixes and insert the values
-					$format = apply_filters( 'ns_cloner_insert_format', null, $source_table, $target_table );
-					$row = apply_filters( 'ns_cloner_insert_values', $row, $source_table, $target_table );
+					$format = apply_filters( 'ns_cloner_insert_format', null, $target_table );
+					$row = apply_filters( 'ns_cloner_insert_values', $row, $target_table );
 					$this->target_db->insert( $target_table, $row, $format );
 					$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
-					do_action( 'ns_cloner_after_insert', $row, $source_table, $target_table );
+					do_action( 'ns_cloner_after_insert', $row, $target_table );
 				} // end rows loop
 				
 			} // end tables loop
