@@ -88,16 +88,18 @@ if ( !class_exists('ns_sidebar') ) {
 	
 		static function featured(){
 			$feed = @fetch_feed( 'http://neversettle.it/plugin-widget-status/featured/feed/' );
-			if( !is_array($feed->get_items()) || sizeof($feed->get_items())<1 ) return;
-			$items = $feed->get_items();
-			$featured = array_shift($items);
-			define('NS_SIDEBAR_FEATURED_LINK', $featured->get_link());
-			$thumbnail_el = $featured->get_item_tags('http://neversettle.it/','thumbnail');
-			?>
-			<a href="<?php echo $featured->get_link(); ?>" target="_blank">
-				<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
-			</a>
-			<?php
+			if ( ! is_wp_error( $feed ) ) { // Checks that the object is created correctly
+				if( !is_array($feed->get_items()) || sizeof($feed->get_items())<1 ) return;
+				$items = $feed->get_items();
+				$featured = array_shift($items);
+				define('NS_SIDEBAR_FEATURED_LINK', $featured->get_link());
+				$thumbnail_el = $featured->get_item_tags('http://neversettle.it/','thumbnail');
+				?>
+					<a href="<?php echo $featured->get_link(); ?>" target="_blank">
+						<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
+					</a>
+				<?php
+			}
 		}
 		
 		static function random( $exclude_links=array() ){
@@ -105,16 +107,18 @@ if ( !class_exists('ns_sidebar') ) {
 				$exclude_links[] = NS_SIDEBAR_FEATURED_LINK;
 			}
 			$feed = @fetch_feed( 'http://neversettle.it/feed/?post_type=product' );
-			if( !is_array($feed->get_items()) || sizeof($feed->get_items())<1 ) return;
-			$items = $feed->get_items();
-			$other_items = array_filter( $items, create_function('$i','return false===strpos("'.join(' ',$exclude_links).'",$i->get_link());') );
-			$random = $other_items[ array_rand($other_items) ];
-			$thumbnail_el = $random->get_item_tags('http://neversettle.it/','thumbnail');
-			?>
-			<a href="<?php echo $random->get_link(); ?>" target="_blank">
-				<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
-			</a>
-			<?php
+			if ( ! is_wp_error( $feed ) ) { // Checks that the object is created correctly
+				if( !is_array($feed->get_items()) || sizeof($feed->get_items())<1 ) return;
+				$items = $feed->get_items();
+				$other_items = array_filter( $items, create_function('$i','return false===strpos("'.join(' ',$exclude_links).'",$i->get_link());') );
+				$random = $other_items[ array_rand($other_items) ];
+				$thumbnail_el = $random->get_item_tags('http://neversettle.it/','thumbnail');
+				?>
+					<a href="<?php echo $random->get_link(); ?>" target="_blank">
+						<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
+					</a>
+				<?php
+			}
 		}
 
 		static function donate($text='Help us provide support and updates') {
