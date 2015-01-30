@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.4.7
+Version: 3.0.4.8
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -75,7 +75,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.4.7';
+	var $version = '3.0.4.8';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -219,7 +219,7 @@ class ns_cloner {
 		$duplicate_count = 1;
 		do { 
 			$duplicate_count++;
-			$target_name = preg_replace('/\..+$/','',$blog_name)."-$duplicate_count";
+			$target_name = preg_replace( array('|/|','/\..+$/'), '', $blog_name )."-$duplicate_count";
 			$target_domain = is_subdomain_install()? $target_name.'.'.$site_domain : $site_domain;
 			$target_path = is_subdomain_install()? $site_base : $site_base.$target_name.'/';
 		} while( domain_exists($target_domain,$target_path) );
@@ -399,13 +399,13 @@ class ns_cloner {
 		// Setup replacements for standard url/name substitution + character encoding issues
 		$search	= array(
 			$this->source_upload_dir_relative,
-			$this->source_upload_url_relative,
+			$this->source_upload_url,
 			$this->source_subd,
 			$this->source_prefix."user_roles",
 		);
 		$replace = array(
 			$this->target_upload_dir_relative,
-			$this->target_upload_url_relative,
+			$this->target_upload_url,
 			$this->target_subd,
 			$this->target_prefix."user_roles",
 		);
@@ -669,7 +669,7 @@ class ns_cloner {
 		//upload urls
 		if( in_array('upload_url',$vars) ){
 			$this->source_upload_url = ns_get_upload_url( $this->source_id, NS_CLONER_LOG_FILE_DETAILED );
-			$this->source_upload_url_relative = str_replace( get_site_url().'/', '', $this->source_upload_url );
+			$this->source_upload_url_relative = str_replace( get_site_url($this->source_id).'/', '', $this->source_upload_url );
 			$this->dlog( "Setting source full upload url: " . $this->source_upload_url . " and shorter relative url: " .$this->source_upload_url_relative );
 		}	
 		//urls
@@ -693,8 +693,7 @@ class ns_cloner {
 						ns_add_admin_notice( __("Could not connect to and select the target database","ns-cloner"), "error", $this->menu_slug, true );
 						wp_redirect(wp_get_referer());
 						exit;
-					}
-								
+					}								
 				}
 			}
 			else{
@@ -730,7 +729,7 @@ class ns_cloner {
 		//upload urls
 		if( in_array('upload_url',$vars) ){
 			$this->target_upload_url = ns_get_upload_url( $this->target_id, NS_CLONER_LOG_FILE_DETAILED );
-			$this->target_upload_url_relative = str_replace( get_site_url().'/', '', $this->target_upload_url );
+			$this->target_upload_url_relative = str_replace( get_site_url($this->target_id).'/', '', $this->target_upload_url );
 			$this->dlog( "Setting target full upload url: " . $this->target_upload_url . " and shorter relative url: " .$this->target_upload_url_relative );
 		}
 		//urls

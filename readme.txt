@@ -88,6 +88,10 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+= 3.0.4.8 =
+* Fixed one-click cloning issue
+* Fixed a few bugs relating to upload paths and replacements
+
 = 3.0.4.7 = 
 * Added WP 4.1 compatibility status
 * Added additional error handling for systems that can't read external feeds for the sidebar

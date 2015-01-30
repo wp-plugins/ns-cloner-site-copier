@@ -49,7 +49,7 @@ function ns_get_upload_dir( $id, $logfile=false ) {
 		$test_2_upload_dir = ns_norm_winpath($test_2_base);	
 	} else {
 		$test_1_base = ns_norm_winpath(WP_CONTENT_DIR . '/blogs.dir');
-		$test_1_upload_dir = ns_norm_winpath($test_1_base . '/' . $id);
+		$test_1_upload_dir = ns_norm_winpath($test_1_base . '/' . $id . '/files');
 		$test_2_base = ns_norm_winpath(WP_CONTENT_DIR . '/uploads/sites');
 		$test_2_upload_dir = ns_norm_winpath($test_2_base . '/' . $id);
 	}
