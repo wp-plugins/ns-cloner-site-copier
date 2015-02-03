@@ -88,6 +88,10 @@ Usually this means that the clone operation did not complete successfully. The m
 2. All new Add-on manager
 
 == Changelog ==
+
+= 3.0.4.9 =
+* Fixed title replacement bug
+
 = 3.0.4.8 =
 * Fixed one-click cloning issue
 * Fixed a few bugs relating to upload paths and replacements
