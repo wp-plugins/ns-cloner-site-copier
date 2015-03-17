@@ -15,7 +15,7 @@ class ns_wpdb extends wpdb {
 /**
  *	Add backqouotes to tables and db-names in SQL queries from phpMyAdmin.
  */
- function ns_sql_backquote($a_name){
+function ns_sql_backquote($a_name){
 	if (!empty($a_name) && $a_name != '*') {
 		if (is_array($a_name)) {
 			$result = array();
@@ -32,6 +32,25 @@ class ns_wpdb extends wpdb {
 	}
 } 
 
+/**
+ * Quote/format value(s) correctly for being used in an insert query
+ */
+function ns_sql_quote($value){
+	if( is_array($value) ){
+		return array_map( 'ns_sql_quote', $value );
+	}
+	else{
+		if( is_null($value) ){
+			return 'NULL';
+		}
+		elseif( is_numeric($value) ){
+			return $value;
+		}
+		else{
+			return "'".esc_sql($value)."'";
+		}
+	}
+}
 
 /**
  *	Better addslashes for SQL queries from phpMyAdmin.

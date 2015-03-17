@@ -89,6 +89,11 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.5 =
+* Refactored MySQL INSERT commands to increase performance and resolve duplicate value issues with several plugins
+* Added better MySQL CONSTRAINT handling to fix compatibility issues with several plugins
+* Added fix for sites using the Wishlist Member plugin
+
 = 3.0.4.9 =
 * Fixed title replacement bug
 

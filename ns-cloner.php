@@ -75,7 +75,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.4.9';
+	var $version = '3.0.5';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -204,6 +204,7 @@ class ns_cloner {
 				array(
 					'nonce' => wp_create_nonce('ns_cloner'),
 					'ajaxurl' => admin_url('/admin-ajax.php'),
+					'cloneurl' => network_admin_url('/admin.php?page='.$this->menu_slug),
 					'loadingimg' => NS_CLONER_V3_PLUGIN_URL . 'images/loading.gif'
 				)
 			);
@@ -472,8 +473,10 @@ class ns_cloner {
 				$structure = $this->source_db->get_var( $query, 1, 0 );
 				$this->handle_any_db_errors( $this->source_db, $query );
 					
-				// Create cloned table structure
+				// Create cloned table structure (and rename any constraints to prevent errors)
 				$query = str_replace( $quoted_source_table, $quoted_target_table, $structure );
+				$query = preg_replace( "/REFERENCES `$this->source_prefix/", "REFERENCES `$this->target_prefix", $query );
+				$query = preg_replace( "/CONSTRAINT `.+?`/", "CONSTRAINT", $query );
 				$this->target_db->query( apply_filters( 'ns_cloner_create_table_query', $query, $this ) );
 				$this->handle_any_db_errors( $this->target_db, $query );
 				
@@ -482,6 +485,8 @@ class ns_cloner {
 				$contents = $this->source_db->get_results( $query, ARRAY_A );
 				$this->handle_any_db_errors( $this->source_db, $query );
 				$this->dlog("Number of rows: ".count($contents));
+				$row_counter = 1;
+				$rows_to_insert = array();
 				
 				foreach( $contents as $row ){
 					// skip any junk rows which shouldn't/needn't be copied
@@ -493,7 +498,7 @@ class ns_cloner {
 						continue;
 					}
 					// make sure target title option doesn't get lost/replaced
-					if( preg_match('/options$/',$target_table) && isset($row['option_name']) && $row['option_name']=='blogname' ){
+					if( preg_match('/options$/',$target_table) && isset($row['option_name']) && $row['option_name']=='blogname' && !empty($this->target_title) ){
 						$row['option_value'] = $this->target_title;
 					}
 					// perform replacements
@@ -502,12 +507,32 @@ class ns_cloner {
 						$row[$field] = apply_filters( 'ns_cloner_field_value', $value, $field, $row, $this );
 						$count_replacements_made += $row_count_replacements_made;
 					}
-					// add hooks for compatibility fixes and insert the values
-					$format = apply_filters( 'ns_cloner_insert_format', null, $target_table );
 					$row = apply_filters( 'ns_cloner_insert_values', $row, $target_table );
-					$this->target_db->insert( $target_table, $row, $format );
-					$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
-					do_action( 'ns_cloner_after_insert', $row, $target_table );
+					// apply one by one insertion rather than batched for debug mode
+					if( apply_filters( 'ns_cloner_single_insert', false, $this, $target_table ) ){
+						$format = apply_filters( 'ns_cloner_insert_format', null, $target_table );
+						$this->target_db->insert( $target_table, $row, $format );
+						$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
+						do_action( 'ns_cloner_after_insert', $rows, $target_table );
+					}
+					//otherwise batch for better performance
+					else{
+						array_push( $rows_to_insert, $row );
+						if( $row_counter%100 === 0 || $row_counter === count($contents) ){
+							$column_names = array_keys( $row );
+							$query = "INSERT INTO $quoted_target_table (".implode(",",ns_sql_backquote($column_names)).") VALUES ";
+							foreach( $rows_to_insert as $row_to_insert ){
+								$values = array_map('ns_sql_quote',$row_to_insert);
+								$query .= "(".implode(",",$values)."),";
+							}
+							$rows_to_insert = array();
+							$query_with_ending = substr($query,0,-1).';';
+							$this->target_db->query( $query_with_ending );
+							$this->handle_any_db_errors( $this->target_db, $query_with_ending );
+							do_action( 'ns_cloner_after_insert_batch', $rows_to_insert, $target_table );
+						}
+					}
+					$row_counter++;
 				} // end rows loop
 				
 			} // end tables loop
@@ -602,7 +627,7 @@ class ns_cloner {
 	// Define filtered request vars - this comes earlier than specific operation vars 
 	function set_up_request( $request = null ){		
 		// allow filtering of $_REQUEST vars + set up class vars from request
-		$this->request = apply_filters( 'ns_cloner_request_vars', is_null($request)? array_merge($_GET,$_POST) : $request );
+		$this->request = apply_filters( 'ns_cloner_request_vars', is_null($request)? array_merge($_GET,$_POST) : $request, $this );
 		// set action - for all cloning operations will be "process"
 		// this is for flexibility if we eventually want to run admin actions 
 		// further outside of the normal pipeline than can be controlled by modes

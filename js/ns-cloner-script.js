@@ -117,13 +117,21 @@
   		// remove old error messages
   		$form.find('.ns-cloner-error-message').remove();
   		// send validation ajax request
-  		$.post(
-  			$form.attr('action').replace('process','ajax_validate'),
-  			$form.serialize(),
-  			function( response ){
+  		$.ajax({
+  			type: 'POST',
+  			url: $form.attr('action').replace('process','ajax_validate'),
+  			data: new FormData( $form[0] ),
+	 		processData: false,
+	 		contentType: false,
+  			success: function( response ){
   				// validation was successful so submit
   				if( response.status=='success' ){
-  					$form.submit();
+  					if( typeof window[response.callback] === 'function' ){
+  						window[response.callback]();
+  					}
+  					else {
+  						$form.submit();
+  					}
   				}
   				// it was not, and errors were returned so show them
   				else if( response.status=='error' && response.messages.length>0 ){
@@ -147,10 +155,11 @@
   					$button.val( $button.data('current_action') ).css('cursor','pointer');
   					$button.removeData();  	
   				}
-  			}
-  		).fail(function(){
-  			alert('Sorry, an unidentified error occured. Please refresh try again.');
-  		});
+  			},
+  			error: function(){
+	  			alert('Sorry, an unidentified error occured. Please refresh try again.');
+	  		}
+	  	});
   	});
 
 	// add autocomplete for search box

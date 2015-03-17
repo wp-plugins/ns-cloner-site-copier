@@ -1,22 +1,15 @@
 <?php
-
-// User Access Manager compatibility patch
-// uses the same column name ("object_id") as a WP table so format type must be explictly set to avoid incorrect casting 
-function ns_cloner_uam_format_fix( $format, $table ){
-	if( preg_match('/uam_accessgroup_to_object$/',$table) ){
-		$format = array('%s','%s','%d');
+// Reorder dependent WishlistMember tables
+function ns_cloner_wlm_table_reorder( $tables, $db, $prefix ){
+	$broadcast_tbl = $prefix.'wlm_emailbroadcast';
+	$broadcast_tbl_index = array_search($broadcast_tbl,$tables);
+	$queue_tbl = $prefix.'wlm_email_queue';
+	$queue_tbl_index = array_search($queue_tbl,$tables);
+	if( $broadcast_tbl_index && $queue_tbl_index ){
+		$tables[ $broadcast_tbl_index ] = $queue_tbl;
+		$tables[ $queue_tbl_index ] = $broadcast_tbl;
 	}
-	return $format;
+	return $tables;
 }
-add_filter( 'ns_cloner_insert_format', 'ns_cloner_uam_format_fix', 10, 2 );
-add_filter( 'ns_cloner_search_replace_format', 'ns_cloner_uam_format_fix', 10, 2 );
+add_filter( 'ns_cloner_site_tables', 'ns_cloner_wlm_table_reorder', 11, 3);
 
-// CSS JS Toolbox compatibility patch
-function ns_cloner_cjtoolbox_post_insert_fix( $values, $table ){
-	global $wpdb;
-	if( preg_match('/cjtoolbox_(authors|templates)$/',$table) && is_null($values['guid']) ){
-		$wpdb->query( $wpdb->prepare( 'UPDATE '.esc_sql($table).' SET guid = NULL WHERE id=%d', $values['id'] ) );
-	}
-}
-add_action( 'ns_cloner_after_insert', 'ns_cloner_cjtoolbox_post_insert_fix', 10, 2 );
-add_action( 'ns_cloner_search_replace_after_update', 'ns_cloner_cjtoolbox_post_insert_fix', 10, 2 );
