@@ -150,15 +150,27 @@
   				}
   				// something weird fell through if it hits here - shouldn't other than maybe a connection error
   				else{
-  					alert('Sorry, an unidentified error occured. Please refresh and try again.');
+  					var error_msg = response;
+  					if( error_msg ){
+  						alert('Sorry, an error occurred: '+error_msg);
+  					}
+  					else{
+  						alert('Sorry, an unidentified error occured');
+  					}
   					// set button back to be clickable again for after they fix errors
   					$button.val( $button.data('current_action') ).css('cursor','pointer');
   					$button.removeData();  	
   				}
   			},
-  			error: function(){
-	  			alert('Sorry, an unidentified error occured. Please refresh try again.');
-	  		}
+			error: function( xhr, status, error ){
+				var error_msg = xhr.responseText;
+				if( error_msg ){
+					alert('Sorry, an error occurred: '+error_msg);
+				}
+				else{
+					alert('Sorry, an unidentified error occured');
+				}
+			}
 	  	});
   	});
 

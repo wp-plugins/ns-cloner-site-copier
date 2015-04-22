@@ -4,7 +4,7 @@ Plugin Name: NS Cloner - Site Copier
 Plugin URI: http://neversettle.it
 Description: All new V3 of the amazing time saving Never Settle Cloner! NS Cloner creates a new site as an exact clone / duplicate / copy of an existing site with theme and all plugins and settings intact in just a few steps. Check out the add-ons for additional powerful features!
 Author: Never Settle
-Version: 3.0.4.9
+Version: 3.0.5.1
 Network: true
 Text Domain: ns-cloner
 Author URI: http://neversettle.it
@@ -75,7 +75,7 @@ class ns_cloner {
 	/**
 	 * Class Globals
 	 */
-	var $version = '3.0.5';
+	var $version = '3.0.5.1';
 	var $menu_slug = 'ns-cloner';
 	var $capability = 'manage_network_options';
 	var $global_tables = array(
@@ -121,7 +121,7 @@ class ns_cloner {
 	var $source_url;
 	var $target_url;
 
-	function __construct() {
+	function __construct() {				
 		// activation hook for making sure this is multisite installed
 		register_activation_hook( __FILE__, array($this,'activate') );
 		// add hook for addons that need to set stuff before the core loads
@@ -205,7 +205,7 @@ class ns_cloner {
 					'nonce' => wp_create_nonce('ns_cloner'),
 					'ajaxurl' => admin_url('/admin-ajax.php'),
 					'cloneurl' => network_admin_url('/admin.php?page='.$this->menu_slug),
-					'loadingimg' => NS_CLONER_V3_PLUGIN_URL . 'images/loading.gif'
+					'loadingimg' => admin_url('/images/spinner.gif')
 				)
 			);
 		}
@@ -224,7 +224,7 @@ class ns_cloner {
 			$target_domain = is_subdomain_install()? $target_name.'.'.$site_domain : $site_domain;
 			$target_path = is_subdomain_install()? $site_base : $site_base.$target_name.'/';
 		} while( domain_exists($target_domain,$target_path) );
-		$target_title = urlencode( get_blog_option($blog_id,'blogname')." (Copy $duplicate_count)" );
+		$target_title = get_blog_option($blog_id,'blogname')." $duplicate_count";
 		// add the link to the site action links
 		$link = $this->build_url( array(
 			"action" => "process",
@@ -439,7 +439,6 @@ class ns_cloner {
 		if ( is_array($tables) && count($tables) > 0 ) {
 			foreach( $tables as $source_table ){
 				
-				$count_tables_cloned++;
 				// if it's a non-prefixed table (root/main), prepend the prefix on, otherwise do replacement
 				if( strpos($source_table,$this->source_prefix)===false ){
 					$target_table = $this->target_prefix . $source_table;
@@ -449,6 +448,24 @@ class ns_cloner {
 				}
 				$quoted_source_table = ns_sql_backquote($source_table);
 				$quoted_target_table = ns_sql_backquote($target_table);
+				$structure_query = "SHOW CREATE TABLE ".$quoted_source_table;
+				$structure = $this->source_db->get_var( $structure_query, 1, 0 );
+				$this->handle_any_db_errors( $this->source_db, $query );
+				
+				// If table references another table not yet created, save it for the end
+				$reference_exists = preg_match_all( "/REFERENCES `{$this->source_prefix}([^`]+?)/", $structure, $reference_matches );
+				if( $reference_exists ){
+					foreach( $reference_matches[1] as &$referenced_table ){
+						$current_pos = array_search( $source_table, $tables );
+						$completed_tables = array_slice( $tables, 0, $current_pos );
+						if( !in_array( $referenced_table, $completed_tables ) ){
+							unset( $tables[$currrent_pos] );
+							array_push( $tables, $source_table);
+							$this->dlog( "Moving table <b>$source_table</b> to end of cloning queue due to dependent constraint" );
+							continue 2;	
+						}
+					}
+				}
 				
 				// Log which table this is (and don't copy a table to itself if for some reason prefix didn't change)
 				$this->dlog_break();
@@ -468,11 +485,6 @@ class ns_cloner {
 					$this->handle_any_db_errors( $this->target_db, $query );
 				}
 					
-				// Get table structure
-				$query = "SHOW CREATE TABLE ".$quoted_source_table;
-				$structure = $this->source_db->get_var( $query, 1, 0 );
-				$this->handle_any_db_errors( $this->source_db, $query );
-					
 				// Create cloned table structure (and rename any constraints to prevent errors)
 				$query = str_replace( $quoted_source_table, $quoted_target_table, $structure );
 				$query = preg_replace( "/REFERENCES `$this->source_prefix/", "REFERENCES `$this->target_prefix", $query );
@@ -485,39 +497,49 @@ class ns_cloner {
 				$contents = $this->source_db->get_results( $query, ARRAY_A );
 				$this->handle_any_db_errors( $this->source_db, $query );
 				$this->dlog("Number of rows: ".count($contents));
-				$row_counter = 1;
+				$row_counter = 0;
 				$rows_to_insert = array();
 				
 				foreach( $contents as $row ){
-					// skip any junk rows which shouldn't/needn't be copied
+					$row_counter++;
+					$insert_this_row = true;
+					// set flag to skip any junk rows which shouldn't/needn't be copied
+					// we can't use 'continue' here because if this is the last row in a batch insert that query still needs to happen
 					if(
-						( isset($row['option_name']) && preg_match('/(_transient_rss_|_transient_feed_)/',$row['option_name']) ) ||
+						( isset($row['option_name']) && preg_match('/(_transient_rss_|_transient_(timeout_)?feed_)/',$row['option_name']) ) ||
 						( isset($row['meta_key']) && preg_match('/(_edit_lock|_edit_last)/',$row['meta_key']) ) || 
 						( !apply_filters('ns_cloner_do_copy_row',true,$row,$source_table) )
 					){
-						continue;
+						$insert_this_row = false;
 					}
-					// make sure target title option doesn't get lost/replaced
-					if( preg_match('/options$/',$target_table) && isset($row['option_name']) && $row['option_name']=='blogname' && !empty($this->target_title) ){
-						$row['option_value'] = $this->target_title;
+					// only spend resources on replacements if this row is going to be inserted
+					if( $insert_this_row ){
+						// make sure target title option doesn't get lost/replaced
+						if( preg_match('/options$/',$target_table) && isset($row['option_name']) && $row['option_name']=='blogname' && !empty($this->target_title) ){
+							$row['option_value'] = $this->target_title;
+						}
+						// perform replacements
+						foreach($row as $field=>$value){
+							$row_count_replacements_made = ns_recursive_search_replace( $value, $search, $replace, $regex_search, $regex_replace, isset($this->request['case_sensitive']) );
+							$row[$field] = apply_filters( 'ns_cloner_field_value', $value, $field, $row, $this );
+							$count_replacements_made += $row_count_replacements_made;
+						}
+						$row = apply_filters( 'ns_cloner_insert_values', $row, $target_table );
 					}
-					// perform replacements
-					foreach($row as $field=>$value){
-						$row_count_replacements_made = ns_recursive_search_replace( $value, $search, $replace, $regex_search, $regex_replace, isset($this->request['case_sensitive']) );
-						$row[$field] = apply_filters( 'ns_cloner_field_value', $value, $field, $row, $this );
-						$count_replacements_made += $row_count_replacements_made;
-					}
-					$row = apply_filters( 'ns_cloner_insert_values', $row, $target_table );
-					// apply one by one insertion rather than batched for debug mode
+					// one by one insertion is less efficient - only do if explicitly set in code elsewhere via filter
 					if( apply_filters( 'ns_cloner_single_insert', false, $this, $target_table ) ){
-						$format = apply_filters( 'ns_cloner_insert_format', null, $target_table );
-						$this->target_db->insert( $target_table, $row, $format );
-						$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
-						do_action( 'ns_cloner_after_insert', $rows, $target_table );
+						if( $insert_this_row ){
+							$format = apply_filters( 'ns_cloner_insert_format', null, $target_table );
+							$this->target_db->insert( $target_table, $row, $format );
+							$this->handle_any_db_errors( $this->target_db, "INSERT INTO $target_table via wpdb --> ".print_r($row,true) );
+							do_action( 'ns_cloner_after_insert', $rows, $target_table );
+						}
 					}
 					//otherwise batch for better performance
 					else{
-						array_push( $rows_to_insert, $row );
+						if( $insert_this_row ){
+							array_push( $rows_to_insert, $row );
+						}
 						if( $row_counter%100 === 0 || $row_counter === count($contents) ){
 							$column_names = array_keys( $row );
 							$query = "INSERT INTO $quoted_target_table (".implode(",",ns_sql_backquote($column_names)).") VALUES ";
@@ -532,9 +554,8 @@ class ns_cloner {
 							do_action( 'ns_cloner_after_insert_batch', $rows_to_insert, $target_table );
 						}
 					}
-					$row_counter++;
-				} // end rows loop
-				
+				} // end rows loop				
+				$count_tables_cloned++;
 			} // end tables loop
 
 			$this->report[ __('Tables cloned','ns-cloner') ] = $count_tables_cloned;

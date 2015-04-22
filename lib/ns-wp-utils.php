@@ -10,7 +10,7 @@ function ns_wp_create_site( $site_name, $site_title, $logfile ) {
 	$site_meta = apply_filters( 'ns_wp_create_site_meta', array("public"=>1) );
 	// use wp's built in wpmu_validate_blog_signup validation for all new site vars
 	// also, use a test on  a known valid name/title to filter out any validation errors added by other plugins via the wpmu_validate_blog_signup filter
-	$baseline_validation = wpmu_validate_blog_signup( 'nsclonervalidationtest', 'NS Cloner Validation Test' );
+	$baseline_validation = wpmu_validate_blog_signup( '1000000', 'NS Cloner Test' );
 	$site_data = wpmu_validate_blog_signup( $site_name, $site_title, $user );
 	$site_errors = array_diff( $baseline_validation['errors']->get_error_messages(), $site_data['errors']->get_error_messages() );
 	if( !empty( $site_errors ) && false ){
