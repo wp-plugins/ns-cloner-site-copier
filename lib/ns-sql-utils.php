@@ -43,9 +43,6 @@ function ns_sql_quote($value){
 		if( is_null($value) ){
 			return 'NULL';
 		}
-		elseif( is_numeric($value) ){
-			return $value;
-		}
 		else{
 			return "'".esc_sql($value)."'";
 		}

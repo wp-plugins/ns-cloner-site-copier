@@ -89,6 +89,9 @@ Usually this means that the clone operation did not complete successfully. The m
 
 == Changelog ==
 
+= 3.0.5.2 =
+* Fixed mysql errors for unquoted numeric strings and empty values
+
 = 3.0.5.1 = 
 * Fixed INSERT logic bug that resulted in some rows not being copied
 * Fixed extra characters in sites cloned via quick clone link
