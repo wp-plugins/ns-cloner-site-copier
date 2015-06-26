@@ -3,6 +3,7 @@
 <?php ns_sidebar::widget( 'subscribe' ); ?>
 <?php ns_sidebar::widget( 'support', array('Have any issues with the cloner, or ideas on how to make it better? We\'d love to hear from you.') ); ?>
 <?php ns_sidebar::widget( 'featured' ); ?>
+<?php ns_sidebar::widget( 'random' ); ?>
 
 <div class="ns-cloner-copy-logs">
 	<div class="ns-cloner-copy-logs-content">

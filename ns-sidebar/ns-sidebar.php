@@ -96,7 +96,7 @@ if ( !class_exists('ns_sidebar') ) {
 				$thumbnail_el = $featured->get_item_tags('http://neversettle.it/','thumbnail');
 				?>
 					<a href="<?php echo $featured->get_link(); ?>" target="_blank">
-						<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
+						<img style="max-width:100%; width:100%; margin-bottom:-5px;" src="<?php echo $thumbnail_el[0]['data']; ?>" />
 					</a>
 				<?php
 			}
@@ -115,7 +115,7 @@ if ( !class_exists('ns_sidebar') ) {
 				$thumbnail_el = $random->get_item_tags('http://neversettle.it/','thumbnail');
 				?>
 					<a href="<?php echo $random->get_link(); ?>" target="_blank">
-						<img style="max-width:100%" src="<?php echo $thumbnail_el[0]['data']; ?>" />
+						<img style="max-width:100%; width:100%; margin-bottom:-5px;" src="<?php echo $thumbnail_el[0]['data']; ?>" />
 					</a>
 				<?php
 			}
